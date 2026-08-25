@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block meta_title %}{{ brand.brand_name }} — Catálogo{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}{{ brand.short_description }}{% endblock %}">
+<meta name="robots" content="index, follow">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ brand.brand_name }}">
+<meta property="og:title" content="{% block og_title %}{{ brand.brand_name }} — Catálogo{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{{ brand.short_description }}{% endblock %}">
+<meta property="og:url" content="{{ request.url }}">
+{% block og_image %}{% if brand.logo %}<meta property="og:image" content="{{ url_for('uploaded_file', filename=brand.logo, _external=True) }}">{% endif %}{% endblock %}
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ self.og_title() }}">
+<meta name="twitter:description" content="{{ self.og_description() }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='catalog.css') }}">
+<style>:root{--lav:{{ brand.primary_color or '#97a2ff' }};--blue:{{ brand.accent_color or '#2d42ff' }};}</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body class="pub-body">
+
+<header class="pub-header">
+  <div class="pub-header-inner">
+    <a class="pub-brand" href="{{ url_for('public_catalog') }}">
+      {% if brand.logo %}<img class="pub-logo" src="{{ url_for('uploaded_file', filename=brand.logo) }}" alt="{{ brand.brand_name }}">
+      {% else %}<span class="pub-logo pub-logo-fallback">{{ (brand.brand_name or 'S')[:1]|upper }}</span>{% endif %}
+      <span class="pub-brand-text">
+        <span class="pub-brand-name">{{ brand.brand_name }}</span>
+        {% if brand.tagline %}<span class="pub-tagline">{{ brand.tagline }}</span>{% endif %}
+      </span>
+    </a>
+    <a class="cart-fab" href="{{ url_for('catalog_pedido') }}" id="cartFab">
+      <span class="cart-fab-icon">🛍</span>
+      <span class="cart-fab-label">MI PEDIDO</span>
+      <span class="cart-fab-count" id="cartFabCount">0</span>
+    </a>
+  </div>
+</header>
+
+{% block subheader %}{% endblock %}
+
+<main class="pub-main">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="pub-footer">
+  <div class="pub-footer-inner">
+    <div class="pub-footer-brand">{{ brand.brand_name }}</div>
+    <div class="pub-footer-links">
+      {% if brand.instagram_url %}<a href="{{ brand.instagram_url }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
+      {% if brand.whatsapp_number %}<a href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
+    </div>
+    <p class="pub-footer-note">Este catálogo es informativo. Los pedidos se confirman directamente por WhatsApp — no se realizan pagos ni compras dentro de esta página.</p>
+  </div>
+</footer>
+
+<script id="catalog-data" type="application/json">{{ (items or [])|tojson }}</script>
+<script>
+window.BRAND = {
+  name: {{ brand.brand_name|tojson }},
+  whatsapp: {{ (brand.whatsapp_number|wanumber)|tojson }},
+};
+</script>
+<script src="{{ url_for('static', filename='catalog.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

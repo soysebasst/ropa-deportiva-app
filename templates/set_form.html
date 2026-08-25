@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block pagetitle %}{{ 'Editar conjunto' if mode=='editar' else 'Nuevo conjunto' }}{% endblock %}
+{% block eyebrow %}{{ 'EDITAR CONJUNTO' if mode=='editar' else 'NUEVO CONJUNTO' }}{% endblock %}
+{% block heading %}{{ 'Editar conjunto' if mode=='editar' else 'Nuevo conjunto' }}{% endblock %}
+{% block content %}
+<div class="form-head">
+  <div class="section-kicker">{{ 'EDITAR CONJUNTO' if mode=='editar' else 'NUEVO CONJUNTO' }}</div>
+  <h2>{{ 'Editar ' ~ set.reference if set else 'Crear conjunto' }}</h2>
+  <p>Combina referencias existentes. El costo se calcula automáticamente; el precio de venta lo defines tú.</p>
+</div>
+
+{% if not products %}
+<div class="empty">Necesitas registrar al menos un producto antes de crear un conjunto.</div>
+{% endif %}
+
+<form class="form card-form" method="post" enctype="multipart/form-data">
+  <div class="form-section">
+    <h3>Información básica</h3>
+    <div class="row">
+      <label>Referencia del conjunto*<input name="set_reference" required placeholder="Ej. CJTO-001" value="{{ set.reference if set else '' }}"></label>
+      <label>Nombre*<input name="set_name" required placeholder="Conjunto deportivo negro" value="{{ set.name if set else '' }}"></label>
+    </div>
+    <label>Descripción<textarea name="set_description" rows="3">{{ set.description if set else '' }}</textarea></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Prendas que lo componen</h3>
+    <p class="muted">El costo se calcula automáticamente con las referencias seleccionadas.</p>
+    <div id="setItems"></div>
+    <button type="button" class="secondary" onclick="addSetItem()">+ Agregar referencia</button>
+    <div class="costbox"><span>COSTO DEL CONJUNTO</span><strong id="setCost">$0</strong></div>
+  </div>
+
+  <div class="form-section">
+    <h3>Tallas del conjunto</h3>
+    <p class="muted">Las tallas en las que se vende el conjunto completo (independientes de las prendas que lo componen).</p>
+    <label>Tallas<input name="set_sizes" placeholder="XS, S, M, L, XL" value="{{ set.sizes if set else '' }}"></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Colores del conjunto</h3>
+    <p class="muted">Cada color puede tener su propia fotografía. Deja el campo de imagen vacío para conservar la actual.</p>
+    {% if mode=='editar' %}
+      <div id="existingColors">
+      {% for c in colors %}
+        <div class="colorrow existing-colorrow">
+          <input type="hidden" name="color_id" value="{{ c.id }}">
+          {% if c.image %}<img class="color-thumb" src="{{ url_for('uploaded_file', filename=c.image) }}">{% else %}<div class="color-thumb placeholder-thumb">S/I</div>{% endif %}
+          <input name="color_name" value="{{ c.color }}" placeholder="Nombre del color" required>
+          <input name="color_image_existing" type="file" accept="image/*">
+          <label class="checklabel"><input type="checkbox" name="color_delete" value="{{ c.id }}" onchange="this.closest('.colorrow').classList.toggle('marked-delete', this.checked)"> Eliminar</label>
+        </div>
+      {% endfor %}
+      </div>
+      <div id="newColors"></div>
+      <button type="button" class="secondary" onclick="addNewColor()">+ Agregar color nuevo</button>
+    {% else %}
+      <div id="colors"></div>
+      <button type="button" class="secondary" onclick="addColor()">+ Agregar color</button>
+    {% endif %}
+  </div>
+
+  <div class="form-section">
+    <h3>Visibilidad en el catálogo público</h3>
+    <label class="publish-toggle">
+      <input type="checkbox" name="published" value="1" {{ 'checked' if (set is none or set.published) else '' }}>
+      <span>Publicado — visible para tus clientes en el catálogo público</span>
+    </label>
+  </div>
+
+  <div class="form-section">
+    <h3>Precio e imagen</h3>
+    <label>Precio de venta del conjunto*<input name="set_sale_price" type="number" min="0" step="1" required placeholder="$0" value="{{ set.sale_price|int if set else '' }}"></label>
+    {% if set and set.image %}
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=set.image) }}"><span>Imagen actual — sube una nueva solo si quieres reemplazarla.</span></div>
+    {% endif %}
+    <label class="filebox"><input name="set_image" type="file" accept="image/*"><span>{{ 'Reemplazar imagen' if set and set.image else 'Selecciona una imagen del conjunto' }}</span><small>JPG, PNG, WEBP o GIF</small></label>
+  </div>
+
+  <div class="form-actions">
+    <a class="secondary" href="{{ url_for('set_detail', sid=set.id) if set else url_for('sets_list') }}">Cancelar</a>
+    <button class="primary" type="submit">{{ 'Guardar cambios' if mode=='editar' else 'Guardar conjunto' }}</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const products = {{ products|tojson }};
+const existingItems = {{ items|tojson }};
+
+function addSetItem(selectedProductId, qty){
+  const d=document.createElement('div');
+  d.className='setrow';
+  let opts='<option value="">Selecciona una referencia</option>';
+  products.forEach(p=>{
+    const sel = (selectedProductId && String(selectedProductId)===String(p.id)) ? 'selected' : '';
+    opts += `<option value="${p.id}" data-cost="${p.cost}" ${sel}>${p.reference} — ${p.name} (${p.category}) — $${Number(p.cost).toLocaleString('es-CO')}</option>`;
+  });
+  d.innerHTML = `<select name="set_product_id" onchange="calcSet()" required>${opts}</select><input name="set_quantity" type="number" min="1" value="${qty||1}" onchange="calcSet()" required><button type="button" class="danger small" onclick="this.parentElement.remove();calcSet()">Quitar</button>`;
+  document.getElementById('setItems').appendChild(d);
+  calcSet();
+}
+
+function calcSet(){
+  let total=0;
+  document.querySelectorAll('.setrow').forEach(r=>{
+    const s=r.querySelector('select'), q=r.querySelector('input'), opt=s.options[s.selectedIndex];
+    total += (parseFloat(opt && opt.dataset.cost || 0) || 0) * (parseInt(q.value||1) || 1);
+  });
+  document.getElementById('setCost').textContent = '$' + Math.round(total).toLocaleString('es-CO');
+}
+
+if (existingItems && existingItems.length){
+  existingItems.forEach(it => addSetItem(it.product_id, it.quantity));
+} else {
+  calcSet();
+}
+
+function addColor(){
+  const d=document.createElement('div');
+  d.className='colorrow';
+  d.innerHTML='<input name="color" placeholder="Nombre del color" required><input name="color_image" type="file" accept="image/*"><button type="button" class="danger small" onclick="this.parentElement.remove()">Quitar</button>';
+  document.getElementById('colors').appendChild(d);
+}
+function addNewColor(){
+  const d=document.createElement('div');
+  d.className='colorrow';
+  d.innerHTML='<input name="new_color" placeholder="Nombre del color" required><input name="new_color_image" type="file" accept="image/*"><button type="button" class="danger small" onclick="this.parentElement.remove()">Quitar</button>';
+  document.getElementById('newColors').appendChild(d);
+}
+</script>
+{% endblock %}

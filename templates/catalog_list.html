@@ -1,0 +1,107 @@
+{% extends "base_public.html" %}
+{% block meta_title %}{{ brand.brand_name }} — Catálogo{% endblock %}
+{% block og_title %}{{ brand.brand_name }} — Catálogo{% endblock %}
+
+{% block subheader %}
+<div class="cat-nav-wrap">
+  <div class="cat-nav" id="catNav">
+    <button class="cat-chip active" data-cat="">TODOS</button>
+    {% for c in categories %}
+    <button class="cat-chip" data-cat="{{ c.name }}">{{ c.name|upper }}</button>
+    {% endfor %}
+  </div>
+  <select class="sort-select" id="sortSelect">
+    <option value="recientes">Más recientes</option>
+    <option value="precio_asc">Precio: menor a mayor</option>
+    <option value="precio_desc">Precio: mayor a menor</option>
+    <option value="nombre_asc">Nombre A-Z</option>
+    <option value="nombre_desc">Nombre Z-A</option>
+  </select>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="pub-grid" id="pubGrid">
+{% for it in items %}
+  <article class="pub-card"
+    data-ref="{{ it.ref }}" data-category="{{ it.category }}" data-price="{{ it.price }}"
+    data-name="{{ it.name|lower }}" data-updated="{{ it.updated }}">
+    <a href="{{ it.url }}" class="pub-card-imgwrap">
+      {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
+      <span class="pub-cat-chip">{{ it.category }}</span>
+    </a>
+    <div class="pub-card-body">
+      <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+      <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
+      <div class="pub-card-price">{{ it.price|money }}</div>
+      {% if it.sizes %}<div class="pub-sizes">{{ it.sizes|join(' · ') }}</div>{% endif %}
+      {% if it.colors %}
+      <div class="pub-colors">
+        {% for c in it.colors %}<span class="pub-dot" style="background:{{ c.name|colorhex }}" title="{{ c.name }}"></span>{% endfor %}
+      </div>
+      {% endif %}
+      <div class="pub-card-actions">
+        <a class="pub-btn pub-btn-outline" href="{{ it.url }}">Ver producto</a>
+        <button class="pub-btn pub-btn-solid quick-add"
+          data-ref="{{ it.ref }}" data-type="{{ it.type }}">Agregar</button>
+      </div>
+    </div>
+  </article>
+{% else %}
+  <div class="pub-empty">Todavía no hay productos publicados en el catálogo.</div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const grid = document.getElementById('pubGrid');
+  const cards = Array.from(grid.querySelectorAll('.pub-card'));
+  const catNav = document.getElementById('catNav');
+  const sortSelect = document.getElementById('sortSelect');
+  let activeCat = '';
+
+  function applyFilterSort(){
+    const order = sortSelect.value;
+    let visible = cards.filter(c => !activeCat || c.dataset.category === activeCat);
+    let hidden = cards.filter(c => activeCat && c.dataset.category !== activeCat);
+    hidden.forEach(c => c.style.display = 'none');
+
+    visible.sort((a,b) => {
+      if (order === 'precio_asc') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+      if (order === 'precio_desc') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+      if (order === 'nombre_asc') return a.dataset.name.localeCompare(b.dataset.name);
+      if (order === 'nombre_desc') return b.dataset.name.localeCompare(a.dataset.name);
+      return (b.dataset.updated||'').localeCompare(a.dataset.updated||''); // recientes
+    });
+    visible.forEach(c => { c.style.display=''; grid.appendChild(c); });
+  }
+
+  catNav.addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-chip');
+    if (!btn) return;
+    catNav.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    applyFilterSort();
+  });
+  sortSelect.addEventListener('change', applyFilterSort);
+
+  document.querySelectorAll('.quick-add').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ref = btn.dataset.ref;
+      const item = (window.CATALOG_ITEMS || []).find(i => i.ref === ref);
+      if (!item) return;
+      SWCart.add({
+        type: item.type, ref: item.ref,
+        color: (item.colors && item.colors[0]) ? item.colors[0].name : '',
+        talla: (item.sizes && item.sizes[0]) ? item.sizes[0] : '',
+        qty: 1,
+      });
+      SWCart.toast(`${item.ref} agregado a tu pedido`);
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block pagetitle %}Productos{% endblock %}
+{% block eyebrow %}CATÁLOGO INTERNO{% endblock %}
+{% block heading %}Productos{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div><div class="section-kicker">CATÁLOGO INTERNO</div><h2>Mis productos</h2><p>Administra referencias, precios, tallas, colores y fotografías.</p></div>
+  <a class="primary" href="{{ url_for('product_new') }}">+ Agregar producto</a>
+</div>
+
+<div class="toolbar">
+  <div class="searchbox"><span>⌕</span><input id="search" placeholder="Buscar por referencia, nombre, categoría, color o talla..." oninput="filterRows()"></div>
+  <select id="categoryFilter" onchange="filterRows()">
+    <option value="">Todas las categorías</option>
+    {% for c in categories %}<option value="{{ c.name }}">{{ c.name }}</option>{% endfor %}
+  </select>
+  <select id="colorFilter" onchange="filterRows()">
+    <option value="">Todos los colores</option>
+    {% for c in colors %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+  </select>
+  <select id="sizeFilter" onchange="filterRows()">
+    <option value="">Todas las tallas</option>
+    {% for s in sizes %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+  </select>
+</div>
+
+<div class="section-title"><h3>Prendas</h3><span id="visibleCount">{{ products|length }} referencias</span></div>
+<div class="grid">
+{% for p in products %}
+  <article class="card product-row"
+    data-search="{{ (p.reference ~ ' ' ~ p.name ~ ' ' ~ p.category ~ ' ' ~ (p.colors_list or '') ~ ' ' ~ (p.sizes or ''))|lower }}"
+    data-category="{{ p.category }}" data-colors="{{ (p.colors_list or '')|lower }}" data-sizes="{{ (p.sizes or '')|lower }}">
+    <div class="image-wrap">
+      {% if p.image %}<img src="{{ url_for('uploaded_file', filename=p.image) }}" class="cover">{% else %}<div class="placeholder">SIN IMAGEN</div>{% endif %}
+      <span class="category-chip">{{ p.category }}</span>
+      <span class="publish-chip {{ 'is-published' if p.published else 'is-hidden' }}">{{ 'Publicado' if p.published else 'Oculto' }}</span>
+    </div>
+    <div class="cardbody">
+      <div class="ref">{{ p.reference }}</div><h3>{{ p.name }}</h3>
+      <div class="sizes"><span>TALLAS</span><strong>{{ p.sizes or '—' }}</strong></div>
+      {% if p.colors_list %}<div class="colors-inline"><span>COLORES</span><strong>{{ p.colors_list.replace(',', ', ') }}</strong></div>{% endif %}
+      <div class="prices"><div><small>COSTO</small><b>{{ p.cost|money }}</b></div><div class="sale"><small>VENTA</small><b>{{ p.sale_price|money }}</b></div></div>
+      <div class="card-actions">
+        <a class="primary small" href="{{ url_for('product_edit', pid=p.id) }}">Editar</a>
+        <a class="secondary small" href="{{ url_for('product_detail', pid=p.id) }}">Ver ficha</a>
+      </div>
+      <form method="post" action="{{ url_for('product_toggle_published', pid=p.id) }}" class="delete-form">
+        <button class="link-btn small" type="submit">{{ 'Ocultar del catálogo' if p.published else 'Publicar en el catálogo' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('product_delete', pid=p.id) }}" onsubmit="return confirm('¿Eliminar la referencia {{ p.reference }}? Esta acción no se puede deshacer.')" class="delete-form">
+        <button class="danger-link small" type="submit">Eliminar referencia</button>
+      </form>
+    </div>
+  </article>
+{% else %}<div class="empty">Todavía no tienes productos registrados.</div>{% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterRows(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const cat=document.getElementById('categoryFilter').value;
+  const color=document.getElementById('colorFilter').value.toLowerCase();
+  const size=document.getElementById('sizeFilter').value.toLowerCase();
+  let visible=0;
+  document.querySelectorAll('.product-row').forEach(r=>{
+    const s=r.dataset.search||'';
+    const matchQ = !q || s.includes(q);
+    const matchCat = !cat || r.dataset.category===cat;
+    const matchColor = !color || (r.dataset.colors||'').includes(color);
+    const matchSize = !size || (','+(r.dataset.sizes||'')+',').includes(','+size+',');
+    const show = matchQ && matchCat && matchColor && matchSize;
+    r.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+  const el=document.getElementById('visibleCount'); if(el) el.textContent = visible + ' referencias';
+}
+</script>
+{% endblock %}

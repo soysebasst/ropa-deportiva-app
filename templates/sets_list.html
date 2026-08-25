@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block pagetitle %}Conjuntos{% endblock %}
+{% block eyebrow %}PRODUCTOS COMPUESTOS{% endblock %}
+{% block heading %}Conjuntos{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div><div class="section-kicker">PRODUCTOS COMPUESTOS</div><h2>Mis conjuntos</h2><p>Combina referencias existentes y define un precio de venta propio.</p></div>
+  <a class="primary" href="{{ url_for('set_new') }}">+ Nuevo conjunto</a>
+</div>
+
+<div class="toolbar">
+  <div class="searchbox"><span>⌕</span><input id="search" placeholder="Buscar conjunto por referencia o nombre..." oninput="filterRows()"></div>
+</div>
+
+<div class="section-title"><h3>Conjuntos</h3><span>{{ sets|length }} conjuntos</span></div>
+<div class="grid">
+{% for s in sets %}
+  <article class="card product-row" data-search="{{ (s.reference ~ ' ' ~ s.name)|lower }}">
+    <div class="image-wrap">
+      {% if s.image %}<img src="{{ url_for('uploaded_file', filename=s.image) }}" class="cover">{% else %}<div class="placeholder">SIN IMAGEN</div>{% endif %}
+      <span class="category-chip">CONJUNTO</span>
+      <span class="publish-chip {{ 'is-published' if s.published else 'is-hidden' }}">{{ 'Publicado' if s.published else 'Oculto' }}</span>
+    </div>
+    <div class="cardbody">
+      <div class="ref">{{ s.reference }}</div><h3>{{ s.name }}</h3>
+      <div class="prices"><div><small>COSTO CALC.</small><b>{{ s.cost|money }}</b></div><div class="sale"><small>VENTA</small><b>{{ s.sale_price|money }}</b></div></div>
+      <div class="card-actions">
+        <a class="primary small" href="{{ url_for('set_edit', sid=s.id) }}">Editar</a>
+        <a class="secondary small" href="{{ url_for('set_detail', sid=s.id) }}">Ver ficha</a>
+      </div>
+      <form method="post" action="{{ url_for('set_toggle_published', sid=s.id) }}" class="delete-form">
+        <button class="link-btn small" type="submit">{{ 'Ocultar del catálogo' if s.published else 'Publicar en el catálogo' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('set_delete', sid=s.id) }}" onsubmit="return confirm('¿Eliminar el conjunto {{ s.reference }}? Esta acción no se puede deshacer.')" class="delete-form">
+        <button class="danger-link small" type="submit">Eliminar conjunto</button>
+      </form>
+    </div>
+  </article>
+{% else %}<div class="empty">Todavía no tienes conjuntos registrados.</div>{% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterRows(){
+  const q=document.getElementById('search').value.toLowerCase();
+  document.querySelectorAll('.product-row').forEach(r=>{
+    const s=r.dataset.search||'';
+    r.style.display = (!q || s.includes(q)) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

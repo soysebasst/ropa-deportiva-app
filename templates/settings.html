@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block pagetitle %}Configuración de tienda{% endblock %}
+{% block eyebrow %}MARCA{% endblock %}
+{% block heading %}Configuración de tienda{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div><div class="section-kicker">MARCA</div><h2>Identidad de tu tienda</h2><p>Todo esto lo usan automáticamente el administrador y el catálogo público — sin tocar código.</p></div>
+</div>
+
+<form class="form card-form" method="post" enctype="multipart/form-data" style="max-width:640px">
+  <div class="form-section">
+    <h3>Nombre de la tienda</h3>
+    <label>Nombre*<input name="brand_name" required value="{{ brand.brand_name }}"></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Logo</h3>
+    {% if brand.logo %}
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.logo) }}" style="background:#111217;padding:10px;border-radius:12px"><span>Logo actual — sube uno nuevo para reemplazarlo.</span></div>
+    {% else %}
+    <p class="muted">Todavía no has subido un logo. Se mostrará la inicial de tu marca mientras tanto.</p>
+    {% endif %}
+    <label class="filebox"><input name="logo" type="file" accept="image/*,.svg"><span>{{ 'Reemplazar logo' if brand.logo else 'Subir logo' }}</span><small>PNG, JPG, WEBP, GIF o SVG</small></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Catálogo público</h3>
+    <label>Frase corta de marca (aparece bajo el logo en el catálogo)<input name="tagline" placeholder="Ropa deportiva para tu estilo." value="{{ brand.tagline }}"></label>
+    <label>Descripción corta (para compartir el enlace en redes/WhatsApp)<textarea name="short_description" rows="2" placeholder="Catálogo oficial de sportswear_ST...">{{ brand.short_description }}</textarea></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Contacto y redes</h3>
+    <p class="muted">El número de WhatsApp se usa para armar automáticamente los mensajes de pedido del catálogo público. Formato recomendado: código de país + número, ej. 573001234567.</p>
+    <div class="row">
+      <label>WhatsApp<input name="whatsapp_number" placeholder="573001234567" value="{{ brand.whatsapp_number }}"></label>
+      <label>Instagram (URL)<input name="instagram_url" placeholder="https://instagram.com/sportswear_st" value="{{ brand.instagram_url }}"></label>
+    </div>
+  </div>
+
+  <div class="form-section" style="border-bottom:0">
+    <h3>Colores de marca</h3>
+    <p class="muted">Estos colores se usan en botones, acentos y elementos destacados de toda la aplicación y del catálogo.</p>
+    <div class="row">
+      <label>Color principal<input type="color" name="primary_color_picker" value="{{ brand.primary_color }}" onchange="document.getElementById('primary_color').value=this.value"><input type="hidden" id="primary_color" name="primary_color" value="{{ brand.primary_color }}"></label>
+      <label>Color de contraste<input type="color" name="accent_color_picker" value="{{ brand.accent_color }}" onchange="document.getElementById('accent_color').value=this.value"><input type="hidden" id="accent_color" name="accent_color" value="{{ brand.accent_color }}"></label>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="primary" type="submit">Guardar configuración</button>
+  </div>
+</form>
+
+<div class="card-form" style="max-width:640px;margin-top:20px">
+  <h3 style="margin-top:0">Enlace de tu catálogo público</h3>
+  <p class="muted">Este es el enlace que puedes compartir con tus clientes por WhatsApp o Instagram.</p>
+  <a class="primary" href="{{ url_for('public_catalog') }}" target="_blank" rel="noopener">{{ request.url_root }}catalogo ↗</a>
+</div>
+{% endblock %}

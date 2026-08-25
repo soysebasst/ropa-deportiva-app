@@ -1,0 +1,190 @@
+/* =========================================================
+   sportswear_ST — CATÁLOGO PÚBLICO
+   Hoja de estilos independiente del administrador. Look comercial,
+   premium, juvenil. Mobile-first.
+   ========================================================= */
+:root{
+  --lav:#97a2ff; --blue:#2d42ff;
+  --ink:#0c0c0f; --muted:#6e7280; --line:#ececf1; --soft:#f6f6fa; --white:#fff;
+  --wa:#25d366; --wa-dark:#1da851;
+  --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
+  --shadow-soft:0 14px 34px rgba(17,18,23,.08);
+}
+*{box-sizing:border-box}
+.pub-body{
+  margin:0; background:var(--white); color:var(--ink);
+  font-family:'Inter',system-ui,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.pub-body img{max-width:100%;display:block}
+.pub-btn{
+  font:800 13px/1 'Inter',sans-serif; letter-spacing:.02em;
+  border-radius:99px; padding:14px 20px; border:0; cursor:pointer;
+  text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.pub-btn:active{transform:scale(.97)}
+.pub-btn-solid{background:var(--blue); color:#fff; box-shadow:0 10px 24px rgba(45,66,255,.28)}
+.pub-btn-outline{background:#fff; color:var(--ink); border:1.5px solid var(--line)}
+.pub-btn-wa{background:var(--wa); color:#fff; box-shadow:0 10px 24px rgba(37,211,102,.3)}
+.pub-btn-text{background:transparent; color:var(--muted); text-decoration:underline; box-shadow:none; padding:10px}
+.pub-btn-lg{padding:16px 22px; font-size:14px; width:100%}
+.pub-btn-block{width:100%}
+
+/* ---------------- header ---------------- */
+.pub-header{
+  position:sticky; top:0; z-index:30; background:rgba(255,255,255,.92); backdrop-filter:saturate(180%) blur(10px);
+  border-bottom:1px solid var(--line); padding:14px 20px;
+}
+.pub-header-inner{display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:1200px; margin:0 auto}
+.pub-brand{display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); min-width:0}
+.pub-brand-text{min-width:0}
+.pub-brand-name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.pub-logo{height:42px; width:42px; border-radius:12px; object-fit:contain; background:var(--soft); flex:0 0 auto}
+.pub-logo-fallback{display:flex; align-items:center; justify-content:center; background:var(--lav); color:#111; font-family:'Anton',Impact,sans-serif; font-size:20px}
+.pub-brand-text{display:flex; flex-direction:column; line-height:1.15}
+.pub-brand-name{font-family:'Anton',Impact,sans-serif; font-size:22px; letter-spacing:.4px}
+.pub-tagline{font-size:11px; color:var(--muted); font-weight:600; margin-top:2px}
+
+/* ---------------- navegación de categorías + orden ---------------- */
+.cat-nav-wrap{
+  position:sticky; top:70px; z-index:20; background:#fff; border-bottom:1px solid var(--line);
+  padding:12px 20px; display:flex; gap:12px; align-items:center; justify-content:space-between;
+}
+.cat-nav{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; flex:1}
+.cat-nav::-webkit-scrollbar{display:none}
+.cat-chip{
+  flex:0 0 auto; border:1.5px solid var(--line); background:#fff; color:var(--ink);
+  font:800 11px 'Inter',sans-serif; letter-spacing:.06em; padding:10px 16px; border-radius:99px; cursor:pointer; white-space:nowrap;
+  transition:.15s;
+}
+.cat-chip.active{background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 8px 18px rgba(45,66,255,.28)}
+.sort-select{
+  border:1.5px solid var(--line); background:var(--soft); border-radius:99px; padding:10px 14px;
+  font:700 11px 'Inter',sans-serif; color:var(--ink); outline:0; flex:0 0 auto; max-width:160px;
+}
+
+/* ---------------- contenido general ---------------- */
+.pub-main{max-width:1200px; margin:0 auto; padding:20px 16px 40px}
+.pub-eyebrow{font-size:10px; font-weight:800; letter-spacing:.16em; color:var(--blue); text-transform:uppercase}
+.pub-breadcrumb{max-width:1200px; margin:0 auto; padding:14px 20px 0}
+.pub-breadcrumb a{color:var(--muted); font-size:12px; font-weight:700; text-decoration:none}
+.pub-breadcrumb a:hover{color:var(--blue)}
+
+.pub-empty{grid-column:1/-1; text-align:center; color:var(--muted); padding:40px 20px; background:var(--soft); border-radius:var(--radius-md)}
+.pub-empty-page{max-width:480px; margin:40px auto; padding:50px 24px}
+.pub-empty-page h2{font-family:'Anton',Impact,sans-serif; font-weight:400; margin:0 0 8px}
+
+/* ---------------- grid de productos ---------------- */
+.pub-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:18px}
+@media(min-width:720px){.pub-grid{grid-template-columns:repeat(3,1fr); gap:20px}}
+@media(min-width:1080px){.pub-grid{grid-template-columns:repeat(4,1fr)}}
+
+.pub-card{background:#fff; border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; transition:.18s; display:flex; flex-direction:column}
+.pub-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-soft)}
+.pub-card-imgwrap{position:relative; display:block; aspect-ratio:1/1.15; background:var(--soft); overflow:hidden}
+.pub-card-imgwrap img{width:100%; height:100%; object-fit:cover}
+.pub-placeholder{width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#a9acb8; font:400 13px 'Anton',Impact,sans-serif; letter-spacing:.08em; background:var(--soft)}
+.pub-placeholder.big{aspect-ratio:1/1; border-radius:var(--radius-lg)}
+.pub-placeholder.small{width:56px;height:56px;border-radius:10px;font-size:8px}
+.pub-cat-chip{position:absolute; top:10px; left:10px; background:rgba(255,255,255,.92); color:var(--ink); font:800 8px 'Inter',sans-serif; letter-spacing:.08em; padding:5px 9px; border-radius:99px}
+.pub-card-body{padding:12px 14px 16px; display:flex; flex-direction:column; gap:5px; flex:1}
+.pub-card-ref{font:800 10px 'Inter',sans-serif; letter-spacing:.1em; color:var(--blue); text-decoration:none}
+.pub-card-name{font:700 14px/1.25 'Inter',sans-serif; color:var(--ink); text-decoration:none; min-height:2.4em}
+.pub-card-price{font-family:'Anton',Impact,sans-serif; font-size:19px; font-weight:400; margin-top:2px}
+.pub-sizes{font-size:10px; font-weight:700; color:var(--muted); letter-spacing:.04em}
+.pub-colors{display:flex; gap:5px; margin-top:2px}
+.pub-dot{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--line); display:inline-block}
+.pub-card-actions{display:flex; gap:8px; margin-top:8px}
+.pub-card-actions .pub-btn{flex:1; padding:11px 10px; font-size:11px}
+
+/* ---------------- ficha de producto ---------------- */
+.pdp{display:grid; grid-template-columns:1fr; gap:28px}
+@media(min-width:860px){.pdp{grid-template-columns:1.1fr 1fr; align-items:start}}
+.pdp-main-image{aspect-ratio:1/1; border-radius:var(--radius-lg); overflow:hidden; background:var(--soft)}
+.pdp-main-image img{width:100%; height:100%; object-fit:cover}
+.pdp-thumbs{display:flex; gap:8px; margin-top:10px; overflow-x:auto}
+.pdp-thumb{width:64px; height:64px; border-radius:10px; overflow:hidden; border:2px solid transparent; padding:0; background:var(--soft); cursor:pointer; flex:0 0 auto}
+.pdp-thumb img{width:100%; height:100%; object-fit:cover}
+.pdp-thumb.active{border-color:var(--blue)}
+.pdp-ref{font:800 11px 'Inter',sans-serif; letter-spacing:.12em; color:var(--blue); margin-top:6px}
+.pdp-title{font-family:'Anton',Impact,sans-serif; font-weight:400; font-size:clamp(26px,5vw,38px); margin:6px 0 10px; text-transform:uppercase; line-height:1.05}
+.pdp-price{font-family:'Anton',Impact,sans-serif; font-size:28px; color:var(--blue); margin-bottom:18px}
+.pdp-block{margin-bottom:18px}
+.pdp-label{display:block; font-size:10px; font-weight:800; letter-spacing:.12em; color:var(--muted); margin-bottom:9px; text-transform:uppercase}
+.pdp-sizes{display:flex; gap:8px; flex-wrap:wrap}
+.size-pill{border:1.5px solid var(--line); background:#fff; border-radius:10px; padding:11px 16px; font:800 13px 'Inter',sans-serif; cursor:pointer}
+.size-pill.active{border-color:var(--blue); background:var(--blue); color:#fff}
+.pdp-colors{display:flex; gap:10px; flex-wrap:wrap}
+.color-swatch{display:flex; flex-direction:column; align-items:center; gap:6px; background:transparent; border:0; cursor:pointer; padding:0; width:64px}
+.color-swatch img,.color-swatch-dot{width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid var(--line); display:block}
+.color-swatch.active img,.color-swatch.active .color-swatch-dot{border-color:var(--blue); box-shadow:0 0 0 2px #fff, 0 0 0 4px var(--blue)}
+.color-swatch-name{font-size:10px; font-weight:700; text-align:center; line-height:1.2}
+.qty-stepper{display:inline-flex; align-items:center; gap:0; border:1.5px solid var(--line); border-radius:99px; overflow:hidden}
+.qty-stepper button{width:44px; height:44px; border:0; background:var(--soft); font-size:18px; font-weight:800; cursor:pointer}
+.qty-stepper span{min-width:36px; text-align:center; font-weight:800}
+.pdp-actions{display:flex; flex-direction:column; gap:10px; margin:20px 0}
+.pdp-description{font-size:13.5px; line-height:1.7; color:#333; white-space:pre-line}
+.pdp-includes{display:grid; gap:8px}
+.pdp-include-row{display:flex; gap:10px; background:var(--soft); border-radius:10px; padding:10px 12px; font-size:13px}
+.pdp-include-row .ref{font-weight:800; color:var(--blue); font-size:11px}
+
+/* ---------------- pantalla "Mi pedido" ---------------- */
+.pedido-page{max-width:640px; margin:0 auto}
+.pedido-head{margin-bottom:18px}
+.pedido-title{font-family:'Anton',Impact,sans-serif; font-weight:400; font-size:32px; margin:4px 0}
+.pedido-sub{color:var(--muted); font-size:13px; margin:0}
+.pedido-list{display:flex; flex-direction:column; gap:10px; margin-bottom:22px}
+.pedido-item{display:grid; grid-template-columns:56px 1fr auto auto; gap:12px; align-items:center; background:var(--soft); border-radius:var(--radius-md); padding:10px}
+.pedido-item-img img,.pedido-item-img .pub-placeholder{width:56px; height:56px; border-radius:10px; object-fit:cover}
+.pedido-item-ref{font:800 9px 'Inter',sans-serif; letter-spacing:.08em; color:var(--blue)}
+.pedido-item-name{font-weight:700; font-size:13px; margin:2px 0}
+.pedido-item-variant{font-size:11px; color:var(--muted)}
+.pedido-item-price{font-size:12px; font-weight:700; margin-top:3px}
+.pedido-item-qty{display:flex; align-items:center; gap:6px; background:#fff; border-radius:99px; padding:4px}
+.qty-btn{width:26px; height:26px; border-radius:50%; border:0; background:var(--soft); font-weight:800; cursor:pointer}
+.pedido-item-remove{border:0; background:transparent; color:var(--muted); font-size:14px; cursor:pointer; padding:6px}
+.pedido-item-remove:hover{color:#d33}
+.pedido-summary{background:var(--ink); color:#fff; border-radius:var(--radius-lg); padding:22px}
+.pedido-total-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px}
+.pedido-total-row span{font:800 10px 'Inter',sans-serif; letter-spacing:.12em; color:#bfc1c9}
+.pedido-total-row strong{font-family:'Anton',Impact,sans-serif; font-size:26px; color:var(--lav)}
+.pedido-disclaimer{font-size:11px; color:#a9acb8; line-height:1.5; margin:0 0 18px}
+.pedido-actions{display:flex; flex-direction:column; gap:10px}
+.pedido-actions .pub-btn-text{color:#a9acb8}
+
+/* ---------------- "Mi pedido": botón siempre visible en el header fijo ---------------- */
+.cart-fab{
+  flex:0 0 auto; display:flex; align-items:center; gap:7px; background:var(--ink); color:#fff;
+  padding:10px 14px; border-radius:99px; text-decoration:none; box-shadow:0 8px 20px rgba(0,0,0,.18);
+  font:800 11px 'Inter',sans-serif; letter-spacing:.02em; transition:.15s;
+}
+.cart-fab:active{transform:scale(.96)}
+.cart-fab-icon{font-size:14px}
+.cart-fab-label{display:none}
+.cart-fab-count{background:var(--lav); color:#111; border-radius:50%; min-width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; padding:0 5px}
+.cart-fab:not(.has-items) .cart-fab-count{opacity:.55}
+@media(min-width:480px){.cart-fab-label{display:inline}}
+
+/* ---------------- toast ---------------- */
+.sw-toast{
+  position:fixed; left:50%; bottom:24px; transform:translate(-50%,12px); z-index:50;
+  background:var(--ink); color:#fff; padding:12px 18px; border-radius:99px; font:700 12px 'Inter',sans-serif;
+  opacity:0; transition:opacity .25s ease, transform .25s ease; box-shadow:0 10px 24px rgba(0,0,0,.25); max-width:90vw; text-align:center;
+}
+.sw-toast.show{opacity:1; transform:translate(-50%,0)}
+
+/* ---------------- footer ---------------- */
+.pub-footer{border-top:1px solid var(--line); margin-top:40px; padding:30px 20px}
+.pub-footer-inner{max-width:1200px; margin:0 auto; text-align:center}
+.pub-footer-brand{font-family:'Anton',Impact,sans-serif; font-size:16px; margin-bottom:8px}
+.pub-footer-links{display:flex; gap:18px; justify-content:center; margin-bottom:12px}
+.pub-footer-links a{color:var(--blue); font-weight:700; font-size:12px; text-decoration:none}
+.pub-footer-note{font-size:10.5px; color:var(--muted); max-width:460px; margin:0 auto; line-height:1.5}
+
+@media(max-width:600px){
+  .pub-header{padding:12px 16px}
+  .cat-nav-wrap{top:65px; padding:10px 16px}
+  .pub-main{padding:16px 12px 30px}
+  .pedido-item{grid-template-columns:48px 1fr auto auto; gap:8px; padding:9px}
+}

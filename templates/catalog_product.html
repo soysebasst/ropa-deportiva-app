@@ -1,0 +1,162 @@
+{% extends "base_public.html" %}
+{% block meta_title %}{% if item %}{{ item.ref }} — {{ item.name }} | {{ brand.brand_name }}{% else %}Producto no encontrado | {{ brand.brand_name }}{% endif %}{% endblock %}
+{% block meta_description %}{% if item %}{{ item.description or (item.name ~ ' — ' ~ brand.brand_name) }}{% else %}{{ brand.short_description }}{% endif %}{% endblock %}
+{% block og_title %}{% if item %}{{ item.ref }} — {{ item.name }}{% else %}{{ brand.brand_name }}{% endif %}{% endblock %}
+{% block og_description %}{% if item %}{{ item.description or brand.short_description }}{% else %}{{ brand.short_description }}{% endif %}{% endblock %}
+{% block og_image %}{% if item and item.image %}<meta property="og:image" content="{{ item.image }}">{% elif brand.logo %}<meta property="og:image" content="{{ url_for('uploaded_file', filename=brand.logo, _external=True) }}">{% endif %}{% endblock %}
+
+{% block subheader %}
+<div class="pub-breadcrumb">
+  <a href="{{ url_for('public_catalog') }}">← Volver al catálogo</a>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if not item %}
+<div class="pub-empty pub-empty-page">
+  <h2>Producto no encontrado</h2>
+  <p>Puede que ya no esté disponible o haya cambiado de referencia.</p>
+  <a class="pub-btn pub-btn-solid" href="{{ url_for('public_catalog') }}">Ver catálogo</a>
+</div>
+{% else %}
+<div class="pdp">
+  <div class="pdp-gallery">
+    <div class="pdp-main-image">
+      {% if item.image %}<img id="pdpMainImage" src="{{ item.image }}" alt="{{ item.name }}">
+      {% else %}<div class="pub-placeholder big">SIN IMAGEN</div>{% endif %}
+    </div>
+    {% if item.images and item.images|length > 1 %}
+    <div class="pdp-thumbs">
+      {% for img in item.images %}
+      <button class="pdp-thumb {{ 'active' if loop.first }}" data-img="{{ img }}"><img src="{{ img }}"></button>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="pdp-info">
+    <div class="pub-eyebrow">{{ item.category }}</div>
+    <div class="pdp-ref">{{ item.ref }}</div>
+    <h1 class="pdp-title">{{ item.name }}</h1>
+    <div class="pdp-price">{{ item.price|money }}</div>
+
+    {% if item.sizes %}
+    <div class="pdp-block">
+      <span class="pdp-label">Tallas disponibles</span>
+      <div class="pdp-sizes" id="pdpSizes">
+        {% for s in item.sizes %}<button class="size-pill" data-size="{{ s }}">{{ s }}</button>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if item.colors %}
+    <div class="pdp-block">
+      <span class="pdp-label">Colores</span>
+      <div class="pdp-colors" id="pdpColors">
+        {% for c in item.colors %}
+        <button class="color-swatch" data-color="{{ c.name }}" data-img="{{ c.image or '' }}">
+          {% if c.image %}<img src="{{ c.image }}">{% else %}<span class="color-swatch-dot" style="background:{{ c.name|colorhex }}"></span>{% endif %}
+          <span class="color-swatch-name">{{ c.name }}</span>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="pdp-block">
+      <span class="pdp-label">Cantidad</span>
+      <div class="qty-stepper">
+        <button type="button" id="qtyMinus">−</button>
+        <span id="qtyValue">1</span>
+        <button type="button" id="qtyPlus">+</button>
+      </div>
+    </div>
+
+    <div class="pdp-actions">
+      <button class="pub-btn pub-btn-solid pub-btn-lg" id="addToOrderBtn">Agregar al pedido</button>
+      <button class="pub-btn pub-btn-wa pub-btn-lg" id="waConsultBtn">Consultar por WhatsApp</button>
+      <button class="pub-btn pub-btn-outline" id="shareBtn">Compartir</button>
+    </div>
+
+    {% if item.description %}
+    <div class="pdp-block">
+      <span class="pdp-label">Descripción</span>
+      <p class="pdp-description">{{ item.description }}</p>
+    </div>
+    {% endif %}
+
+    {% if item.includes %}
+    <div class="pdp-block">
+      <span class="pdp-label">Incluye</span>
+      <div class="pdp-includes">
+        {% for inc in item.includes %}
+        <div class="pdp-include-row"><span class="ref">{{ inc.ref }}</span><span>{{ inc.name }}</span></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if item %}
+<script id="item-data" type="application/json">{{ item|tojson }}</script>
+<script>
+(function(){
+  const item = JSON.parse(document.getElementById('item-data').textContent);
+  let selectedColor = null;
+  let selectedSize = null;
+  let qty = 1;
+
+  const mainImage = document.getElementById('pdpMainImage');
+
+  document.querySelectorAll('.pdp-thumb').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pdp-thumb').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (mainImage) mainImage.src = btn.dataset.img;
+    });
+  });
+
+  document.querySelectorAll('.color-swatch').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedColor = btn.dataset.color;
+      if (btn.dataset.img && mainImage) {
+        mainImage.src = btn.dataset.img;
+        document.querySelectorAll('.pdp-thumb').forEach(t => t.classList.toggle('active', t.dataset.img === btn.dataset.img));
+      }
+    });
+  });
+
+  document.querySelectorAll('.size-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.size-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSize = btn.dataset.size;
+    });
+  });
+
+  const qtyValue = document.getElementById('qtyValue');
+  document.getElementById('qtyMinus').addEventListener('click', () => { qty = Math.max(1, qty - 1); qtyValue.textContent = qty; });
+  document.getElementById('qtyPlus').addEventListener('click', () => { qty = qty + 1; qtyValue.textContent = qty; });
+
+  document.getElementById('addToOrderBtn').addEventListener('click', () => {
+    SWCart.add({ type: item.type, ref: item.ref, color: selectedColor || '', talla: selectedSize || '', qty: qty });
+    SWCart.toast(`${item.ref} agregado a tu pedido`);
+  });
+
+  document.getElementById('waConsultBtn').addEventListener('click', () => {
+    SWCart.sendProductInquiry(item, selectedColor, selectedSize);
+  });
+
+  document.getElementById('shareBtn').addEventListener('click', () => {
+    SWCart.shareOrCopy(window.location.href, item.ref + ' — ' + item.name, item.name + ' en ' + (window.BRAND && window.BRAND.name));
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block pagetitle %}{{ s.reference }}{% endblock %}
+{% block eyebrow %}FICHA DE CONJUNTO{% endblock %}
+{% block heading %}{{ s.reference }}{% endblock %}
+{% block content %}
+<div class="ficha">
+  <div class="ficha-image">
+    {% if s.image %}<img src="{{ url_for('uploaded_file', filename=s.image) }}">{% else %}<div class="placeholder big">SIN IMAGEN</div>{% endif %}
+  </div>
+  <div class="ficha-info">
+    <div class="section-kicker">CONJUNTO</div>
+    <span class="publish-chip inline {{ 'is-published' if s.published else 'is-hidden' }}">{{ 'Publicado en el catálogo' if s.published else 'Oculto del catálogo' }}</span>
+    <div class="ficha-ref">{{ s.reference }}</div>
+    <h2 class="ficha-title">{{ s.name }}</h2>
+
+    <div class="ficha-prices">
+      <div><small>COSTO CALCULADO</small><b>{{ s.cost|money }}</b></div>
+      <div class="sale"><small>VENTA</small><b>{{ s.sale_price|money }}</b></div>
+    </div>
+
+    <div class="ficha-block">
+      <span class="label">TALLAS</span>
+      <div class="pill-row">
+        {% for t in (s.sizes or '').split(',') if t.strip() %}<span class="pill">{{ t.strip() }}</span>{% else %}<span class="muted">Sin tallas definidas</span>{% endfor %}
+      </div>
+    </div>
+
+    <div class="ficha-block">
+      <span class="label">COLORES</span>
+      {% if colors %}
+      <div class="color-grid">
+        {% for c in colors %}
+        <div class="color-card">
+          {% if c.image %}<img src="{{ url_for('uploaded_file', filename=c.image) }}">{% else %}<div class="color-thumb-lg placeholder-thumb">S/I</div>{% endif %}
+          <span>{{ c.color }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<p class="muted">Este conjunto no tiene colores registrados.</p>{% endif %}
+    </div>
+
+    <div class="ficha-block">
+      <span class="label">REFERENCIAS QUE LO COMPONEN</span>
+      <div class="compose-list">
+        {% for it in items %}
+        <a href="{{ url_for('product_detail', pid=it.product_id) }}" class="compose-item">
+          {% if it.image %}<img src="{{ url_for('uploaded_file', filename=it.image) }}">{% else %}<div class="color-thumb placeholder-thumb">S/I</div>{% endif %}
+          <div><div class="ref">{{ it.reference }}</div><div>{{ it.name }}</div></div>
+          <div class="compose-qty">x{{ it.quantity }}</div>
+          <div class="compose-cost">{{ it.cost|money }}</div>
+        </a>
+        {% else %}<p class="muted">Este conjunto no tiene referencias asociadas.</p>{% endfor %}
+      </div>
+    </div>
+
+    {% if s.description %}
+    <div class="ficha-block"><span class="label">DESCRIPCIÓN</span><p class="description-text">{{ s.description }}</p></div>
+    {% endif %}
+
+    <div class="form-actions">
+      <a class="secondary" href="{{ url_for('sets_list') }}">Volver</a>
+      <form method="post" action="{{ url_for('set_toggle_published', sid=s.id) }}">
+        <button class="secondary" type="submit">{{ 'Ocultar del catálogo' if s.published else 'Publicar en el catálogo' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('set_delete', sid=s.id) }}" onsubmit="return confirm('¿Eliminar el conjunto {{ s.reference }}? Esta acción no se puede deshacer.')">
+        <button class="danger" type="submit">Eliminar</button>
+      </form>
+      <a class="primary" href="{{ url_for('set_edit', sid=s.id) }}">EDITAR CONJUNTO</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

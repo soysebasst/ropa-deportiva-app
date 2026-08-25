@@ -1,0 +1,17 @@
+# Entorno virtual y caché de Python
+.venv/
+__pycache__/
+*.pyc
+
+# Copia de trabajo local de la base de datos y las imágenes.
+# (seed_data/ SÍ se sube — es la copia de siembra para el primer despliegue)
+/inventario.db
+/inventario.db-shm
+/inventario.db-wal
+/uploads/
+
+# Respaldos automáticos locales (pueden pesar bastante, no hace falta subirlos)
+/backups/
+
+# Variables de entorno locales, si algún día usas un archivo .env
+.env

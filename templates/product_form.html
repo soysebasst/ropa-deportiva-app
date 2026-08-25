@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block pagetitle %}{{ 'Editar producto' if mode=='editar' else 'Nuevo producto' }}{% endblock %}
+{% block eyebrow %}{{ 'EDITAR REFERENCIA' if mode=='editar' else 'NUEVA REFERENCIA' }}{% endblock %}
+{% block heading %}{{ 'Editar producto' if mode=='editar' else 'Nuevo producto' }}{% endblock %}
+{% block content %}
+<div class="form-head">
+  <div class="section-kicker">{{ 'EDITAR REFERENCIA' if mode=='editar' else 'NUEVA REFERENCIA' }}</div>
+  <h2>{{ 'Editar ' ~ product.reference if mode=='editar' else 'Registrar producto' }}</h2>
+  <p>{{ 'Modifica la información y guarda los cambios sobre el mismo producto.' if mode=='editar' else 'Agrega la información completa de una prenda.' }}</p>
+</div>
+
+<form class="form card-form" method="post" enctype="multipart/form-data">
+  <div class="form-section">
+    <h3>Información básica</h3>
+    <div class="row">
+      <label>Referencia*<input name="reference" required placeholder="Ej. TOP-001" value="{{ product.reference if product else '' }}"></label>
+      <label>Categoría*
+        <select name="category" required>
+          {% for c in categories %}<option value="{{ c.name }}" {{ 'selected' if product and product.category==c.name else '' }}>{{ c.name }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <label>Nombre*<input name="name" required placeholder="Top deportivo básico" value="{{ product.name if product else '' }}"></label>
+    <label>Descripción<textarea name="description" rows="3" placeholder="Detalles de tela, ajuste, uso recomendado...">{{ product.description if product else '' }}</textarea></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Precios y tallas</h3>
+    <div class="row">
+      <label>Precio de costo*<input name="cost" type="number" min="0" step="1" required placeholder="$0" value="{{ product.cost|int if product else '' }}"></label>
+      <label>Precio de venta*<input name="sale_price" type="number" min="0" step="1" required placeholder="$0" value="{{ product.sale_price|int if product else '' }}"></label>
+      <label>Tallas<input name="sizes" placeholder="XS, S, M, L, XL" value="{{ product.sizes if product else '' }}"></label>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Visibilidad en el catálogo público</h3>
+    <label class="publish-toggle">
+      <input type="checkbox" name="published" value="1" {{ 'checked' if (product is none or product.published) else '' }}>
+      <span>Publicado — visible para tus clientes en el catálogo público</span>
+    </label>
+    <p class="muted">Si lo desmarcas, el producto sigue existiendo aquí en el administrador pero desaparece del catálogo público.</p>
+  </div>
+
+  <div class="form-section">
+    <h3>Fotografía principal</h3>
+    {% if product and product.image %}
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=product.image) }}"><span>Imagen actual — sube una nueva solo si quieres reemplazarla.</span></div>
+    {% endif %}
+    <label class="filebox"><input name="image" type="file" accept="image/*"><span>{{ 'Reemplazar imagen' if product and product.image else 'Selecciona una imagen' }}</span><small>JPG, PNG, WEBP o GIF</small></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Colores</h3>
+    <p class="muted">Cada color puede tener su propia fotografía. Deja el campo de imagen vacío para conservar la actual.</p>
+
+    {% if mode=='editar' %}
+      <div id="existingColors">
+      {% for c in colors %}
+        <div class="colorrow existing-colorrow">
+          <input type="hidden" name="color_id" value="{{ c.id }}">
+          {% if c.image %}<img class="color-thumb" src="{{ url_for('uploaded_file', filename=c.image) }}">{% else %}<div class="color-thumb placeholder-thumb">S/I</div>{% endif %}
+          <input name="color_name" value="{{ c.color }}" placeholder="Nombre del color" required>
+          <input name="color_image_existing" type="file" accept="image/*">
+          <label class="checklabel"><input type="checkbox" name="color_delete" value="{{ c.id }}" onchange="this.closest('.colorrow').classList.toggle('marked-delete', this.checked)"> Eliminar</label>
+        </div>
+      {% endfor %}
+      </div>
+      <div id="newColors"></div>
+      <button type="button" class="secondary" onclick="addNewColor()">+ Agregar color nuevo</button>
+    {% else %}
+      <div id="colors"></div>
+      <button type="button" class="secondary" onclick="addColor()">+ Agregar color</button>
+    {% endif %}
+  </div>
+
+  <div class="form-actions">
+    <a class="secondary" href="{{ url_for('product_detail', pid=product.id) if product else url_for('products_list') }}">Cancelar</a>
+    <button class="primary" type="submit">{{ 'Guardar cambios' if mode=='editar' else 'Guardar producto' }}</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addColor(){
+  const d=document.createElement('div');
+  d.className='colorrow';
+  d.innerHTML='<input name="color" placeholder="Nombre del color" required><input name="color_image" type="file" accept="image/*"><button type="button" class="danger small" onclick="this.parentElement.remove()">Quitar</button>';
+  document.getElementById('colors').appendChild(d);
+}
+function addNewColor(){
+  const d=document.createElement('div');
+  d.className='colorrow';
+  d.innerHTML='<input name="new_color" placeholder="Nombre del color" required><input name="new_color_image" type="file" accept="image/*"><button type="button" class="danger small" onclick="this.parentElement.remove()">Quitar</button>';
+  document.getElementById('newColors').appendChild(d);
+}
+</script>
+{% endblock %}

@@ -120,6 +120,10 @@
 .color-swatch img,.color-swatch-dot{width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid var(--line); display:block}
 .color-swatch.active img,.color-swatch.active .color-swatch-dot{border-color:var(--blue); box-shadow:0 0 0 2px #fff, 0 0 0 4px var(--blue)}
 .color-swatch-name{font-size:10px; font-weight:700; text-align:center; line-height:1.2}
+.color-swatch-text{flex-direction:row; width:auto; border:1.5px solid var(--line); border-radius:10px; padding:10px 16px 10px 12px; gap:8px; font:800 13px 'Inter',sans-serif; color:var(--ink)}
+.color-swatch-text .color-swatch-mini{width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,.18); flex:none; display:inline-block}
+.color-swatch-text.active{border-color:var(--blue); background:var(--blue); color:#fff}
+.color-swatch-text.active .color-swatch-mini{border-color:#fff}
 .qty-stepper{display:inline-flex; align-items:center; gap:0; border:1.5px solid var(--line); border-radius:99px; overflow:hidden}
 .qty-stepper button{width:44px; height:44px; border:0; background:var(--soft); font-size:18px; font-weight:800; cursor:pointer}
 .qty-stepper span{min-width:36px; text-align:center; font-weight:800}

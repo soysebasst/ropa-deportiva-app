@@ -274,19 +274,22 @@ def digits_only(s):
 
 
 COLOR_HEX_MAP = {
-    "negro": "#111111", "black": "#111111",
-    "blanco": "#ffffff", "white": "#ffffff",
-    "rosado": "#f472b6", "rosa": "#f472b6", "pink": "#f472b6",
-    "azul": "#2d42ff", "blue": "#2d42ff", "celeste": "#7dd3fc", "azul rey": "#1e3a8a", "navy": "#1e3a8a",
-    "rojo": "#ef4444", "red": "#ef4444",
-    "verde": "#22c55e", "green": "#22c55e",
-    "gris": "#9ca3af", "grey": "#9ca3af", "gray": "#9ca3af",
-    "amarillo": "#eab308", "yellow": "#eab308",
+    "negro": "#111111", "black": "#111111", "negro mate": "#1a1a1a",
+    "blanco": "#ffffff", "white": "#ffffff", "hueso": "#f2ede1", "marfil": "#f2ede1",
+    "rosado": "#f472b6", "rosa": "#f472b6", "pink": "#f472b6", "fucsia": "#e0249a",
+    "azul": "#2d42ff", "blue": "#2d42ff", "celeste": "#7dd3fc", "azul cielo": "#7dd3fc",
+    "azul rey": "#1e3a8a", "navy": "#1e3a8a", "azul marino": "#1e3a8a", "azul petroleo": "#0f4c5c", "azul petróleo": "#0f4c5c",
+    "rojo": "#ef4444", "red": "#ef4444", "coral": "#ff6f61", "salmon": "#fa8072", "salmón": "#fa8072",
+    "verde": "#22c55e", "green": "#22c55e", "verde militar": "#4b5320", "verde oliva": "#6b7a3a", "oliva": "#6b7a3a",
+    "verde menta": "#7fd8be", "menta": "#7fd8be", "verde limon": "#a3e635", "verde limón": "#a3e635",
+    "gris": "#9ca3af", "grey": "#9ca3af", "gray": "#9ca3af", "gris claro": "#d1d5db", "gris oscuro": "#4b5563",
+    "gris jaspe": "#a8a8a8", "gris jaspeado": "#a8a8a8", "plomo": "#6b7280",
+    "amarillo": "#eab308", "yellow": "#eab308", "mostaza": "#c9971b",
     "naranja": "#f97316", "orange": "#f97316",
-    "morado": "#a855f7", "purple": "#a855f7", "violeta": "#a855f7", "lila": "#c4b5fd",
-    "beige": "#e7d9c4", "crema": "#f5ecd9",
-    "café": "#7c4a2d", "cafe": "#7c4a2d", "marron": "#7c4a2d", "marrón": "#7c4a2d", "vinotinto": "#7f1d3a",
-    "fucsia": "#e0249a", "turquesa": "#14b8a6", "dorado": "#d4af37", "plateado": "#c0c0c0",
+    "morado": "#a855f7", "purple": "#a855f7", "violeta": "#a855f7", "lila": "#c4b5fd", "lavanda": "#b9a5e8",
+    "beige": "#e7d9c4", "crema": "#f5ecd9", "arena": "#d9c6a5", "kaki": "#c3b091", "caqui": "#c3b091",
+    "café": "#7c4a2d", "cafe": "#7c4a2d", "marron": "#7c4a2d", "marrón": "#7c4a2d", "vinotinto": "#7f1d3a", "vino": "#7f1d3a",
+    "turquesa": "#14b8a6", "aqua": "#22d3d8", "dorado": "#d4af37", "plateado": "#c0c0c0", "perla": "#e7e5e0",
 }
 
 

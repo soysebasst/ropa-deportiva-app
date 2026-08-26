@@ -54,10 +54,16 @@
       <span class="pdp-label">Colores</span>
       <div class="pdp-colors" id="pdpColors">
         {% for c in item.colors %}
-        <button class="color-swatch" data-color="{{ c.name }}" data-img="{{ c.image or '' }}">
-          {% if c.image %}<img src="{{ c.image }}">{% else %}<span class="color-swatch-dot" style="background:{{ c.name|colorhex }}"></span>{% endif %}
+        {% if c.image %}
+        <button class="color-swatch" data-color="{{ c.name }}" data-img="{{ c.image }}">
+          <img src="{{ c.image }}">
           <span class="color-swatch-name">{{ c.name }}</span>
         </button>
+        {% else %}
+        <button class="color-swatch color-swatch-text" data-color="{{ c.name }}" data-img="">
+          <span class="color-swatch-mini" style="background:{{ c.name|colorhex }}"></span>{{ c.name }}
+        </button>
+        {% endif %}
         {% endfor %}
       </div>
     </div>

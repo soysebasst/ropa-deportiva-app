@@ -102,3 +102,4 @@ a.primary,a.secondary,a.danger,a.link{text-decoration:none;display:inline-block;
 .publish-toggle{display:flex!important;flex-direction:row!important;align-items:center;gap:10px;font-weight:600;font-size:12px;color:var(--ink)}
 .publish-toggle input{width:auto}
 .link-btn{background:transparent;border:0;color:var(--blue);font:600 11px Inter;cursor:pointer;padding:4px;text-decoration:underline;width:100%;text-align:center;margin-top:6px}
+.hero-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}

@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, session, Response
+import csv, io
 from werkzeug.utils import secure_filename
 from pathlib import Path
 from datetime import datetime
@@ -795,6 +796,51 @@ def set_toggle_published(sid):
     finally:
         conn.close()
     return redirect(request.referrer or url_for("sets_list"))
+
+
+# ---------------------------------------------------------------------------
+# Exportar (CSV con costo / venta / ganancia, para llevarlo a Excel)
+# ---------------------------------------------------------------------------
+@app.route("/exportar/catalogo.csv")
+def export_catalog_csv():
+    conn = db()
+    products = _products_with_colors(conn)
+    sets_ = _sets_with_cost(conn)
+    conn.close()
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "Tipo", "Referencia", "Nombre", "Categoría", "Colores", "Tallas",
+        "Costo", "Precio de venta", "Ganancia", "Margen %", "Publicado",
+    ])
+
+    def add_row(tipo, reference, name, category, colors_list, sizes, cost, sale_price, published):
+        cost = float(cost or 0)
+        sale_price = float(sale_price or 0)
+        profit = sale_price - cost
+        margin = round((profit / sale_price) * 100, 1) if sale_price else 0
+        writer.writerow([
+            tipo, reference, name, category or "", colors_list or "", sizes or "",
+            round(cost), round(sale_price), round(profit),
+            margin, "Sí" if published else "No",
+        ])
+
+    for p in products:
+        add_row("Producto", p["reference"], p["name"], p.get("category"), p.get("colors_list"), p.get("sizes"),
+                p.get("cost"), p.get("sale_price"), p.get("published"))
+
+    for s in sets_:
+        add_row("Conjunto", s["reference"], s["name"], "Conjuntos", "", s.get("sizes"),
+                s.get("cost"), s.get("sale_price"), s.get("published"))
+
+    csv_bytes = "﻿" + buf.getvalue()  # BOM para que Excel muestre bien las tildes/ñ
+    filename = "catalogo_costo_venta_" + now_str().replace(" ", "_").replace(":", "-") + ".csv"
+    return Response(
+        csv_bytes,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -42,8 +42,7 @@
       {% endif %}
       <div class="pub-card-actions">
         <a class="pub-btn pub-btn-outline" href="{{ it.url }}">Ver producto</a>
-        <button class="pub-btn pub-btn-solid quick-add"
-          data-ref="{{ it.ref }}" data-type="{{ it.type }}">Agregar</button>
+        <a class="pub-btn pub-btn-solid" href="{{ it.url }}#elegir">Agregar</a>
       </div>
     </div>
   </article>
@@ -87,21 +86,6 @@
     applyFilterSort();
   });
   sortSelect.addEventListener('change', applyFilterSort);
-
-  document.querySelectorAll('.quick-add').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const ref = btn.dataset.ref;
-      const item = (window.CATALOG_ITEMS || []).find(i => i.ref === ref);
-      if (!item) return;
-      SWCart.add({
-        type: item.type, ref: item.ref,
-        color: (item.colors && item.colors[0]) ? item.colors[0].name : '',
-        talla: (item.sizes && item.sizes[0]) ? item.sizes[0] : '',
-        qty: 1,
-      });
-      SWCart.toast(`${item.ref} agregado a tu pedido`);
-    });
-  });
 })();
 </script>
 {% endblock %}

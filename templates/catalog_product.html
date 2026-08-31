@@ -40,6 +40,7 @@
     <h1 class="pdp-title">{{ item.name }}</h1>
     <div class="pdp-price">{{ item.price|money }}</div>
 
+    <div id="elegir">
     {% if item.sizes %}
     <div class="pdp-block">
       <span class="pdp-label">Tallas disponibles</span>
@@ -68,6 +69,7 @@
       </div>
     </div>
     {% endif %}
+    </div>
 
     <div class="pdp-block">
       <span class="pdp-label">Cantidad</span>
@@ -117,6 +119,16 @@
   let qty = 1;
 
   const mainImage = document.getElementById('pdpMainImage');
+
+  // Si llegamos aquí desde el botón "Agregar" del catálogo (enlace con #elegir),
+  // resaltamos brevemente la zona de tallas/colores para que quede claro qué elegir.
+  if (window.location.hash === '#elegir') {
+    const chooser = document.getElementById('elegir');
+    if (chooser) {
+      chooser.classList.add('pdp-choose-highlight');
+      setTimeout(() => chooser.classList.remove('pdp-choose-highlight'), 2200);
+    }
+  }
 
   document.querySelectorAll('.pdp-thumb').forEach(btn => {
     btn.addEventListener('click', () => {

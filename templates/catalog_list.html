@@ -34,6 +34,9 @@
       <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
       <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
       <div class="pub-card-price">{{ it.price|money }}</div>
+      {% if it.type == 'conjunto' and it.savings and it.savings > 0 %}
+      <div class="pub-savings-chip">Ahorras {{ it.savings|money }}</div>
+      {% endif %}
       {% if it.sizes %}<div class="pub-sizes">{{ it.sizes|join(' · ') }}</div>{% endif %}
       {% if it.colors %}
       <div class="pub-colors">

@@ -613,7 +613,7 @@ def _sets_with_cost(conn):
 
 def _set_items_detail(conn, sid):
     rows = conn.execute(
-        """SELECT si.id AS item_id, si.quantity, p.id AS product_id, p.reference, p.name, p.cost, p.image
+        """SELECT si.id AS item_id, si.quantity, p.id AS product_id, p.reference, p.name, p.cost, p.sale_price, p.image
            FROM set_items si JOIN products p ON p.id = si.product_id
            WHERE si.set_id=? ORDER BY p.reference""",
         (sid,),
@@ -1181,6 +1181,10 @@ def public_catalog_items(conn):
                 u = image_url(c["image"])
                 if u not in images:
                     images.append(u)
+        # Cuánto costarían las prendas si el cliente las comprara por separado,
+        # para mostrarle el ahorro real de llevarlas en conjunto.
+        individual_price = sum((it["sale_price"] or 0) * (it["quantity"] or 1) for it in set_items)
+        savings = individual_price - (s["sale_price"] or 0)
         items.append({
             "type": "conjunto",
             "ref": s["reference"],
@@ -1188,12 +1192,14 @@ def public_catalog_items(conn):
             "category": "Conjuntos",
             "description": s["description"] or "",
             "price": s["sale_price"],
+            "individual_price": individual_price,
+            "savings": savings,
             "image": image_url(s["image"]),
             "images": images,
             "colors": [{"name": c["color"], "image": image_url(c["image"])} for c in colors],
             "sizes": [t.strip() for t in (s["sizes"] or "").split(",") if t.strip()],
             "updated": s["updated_at"] or "",
-            "includes": [{"ref": it["reference"], "name": it["name"]} for it in set_items],
+            "includes": [{"ref": it["reference"], "name": it["name"], "sale_price": it["sale_price"], "quantity": it["quantity"]} for it in set_items],
             "url": url_for("catalog_product", reference=s["reference"]),
         })
     return items

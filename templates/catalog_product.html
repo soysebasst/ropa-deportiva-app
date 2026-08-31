@@ -40,6 +40,13 @@
     <h1 class="pdp-title">{{ item.name }}</h1>
     <div class="pdp-price">{{ item.price|money }}</div>
 
+    {% if item.type == 'conjunto' and item.savings and item.savings > 0 %}
+    <div class="pdp-savings">
+      <span class="pdp-savings-badge">Ahorras {{ item.savings|money }}</span>
+      <span class="pdp-savings-note">Llevando estas prendas por separado costarían {{ item.individual_price|money }}</span>
+    </div>
+    {% endif %}
+
     <div id="elegir">
     {% if item.sizes %}
     <div class="pdp-block">
@@ -98,9 +105,18 @@
       <span class="pdp-label">Incluye</span>
       <div class="pdp-includes">
         {% for inc in item.includes %}
-        <div class="pdp-include-row"><span class="ref">{{ inc.ref }}</span><span>{{ inc.name }}</span></div>
+        <div class="pdp-include-row">
+          <span class="ref">{{ inc.ref }}</span>
+          <span>{{ (inc.quantity ~ 'x ') if inc.quantity and inc.quantity > 1 else '' }}{{ inc.name }}</span>
+          {% if inc.sale_price %}<span class="pdp-include-price">{{ (inc.sale_price * (inc.quantity or 1))|money }}</span>{% endif %}
+        </div>
         {% endfor %}
       </div>
+      {% if item.savings and item.savings > 0 %}
+      <div class="pdp-includes-total">
+        <span>Precio comprando por separado</span><strong>{{ item.individual_price|money }}</strong>
+      </div>
+      {% endif %}
     </div>
     {% endif %}
   </div>

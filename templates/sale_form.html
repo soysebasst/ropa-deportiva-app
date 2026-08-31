@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block pagetitle %}{{ 'Editar venta' if mode=='editar' else 'Registrar venta' }}{% endblock %}
+{% block eyebrow %}{{ 'EDITAR VENTA' if mode=='editar' else 'NUEVA VENTA' }}{% endblock %}
+{% block heading %}{{ 'Editar venta' if mode=='editar' else 'Registrar venta' }}{% endblock %}
+{% block content %}
+<div class="form-head">
+  <div class="section-kicker">REGISTRO PRIVADO — SOLO ADMINISTRADOR</div>
+  <h2>{{ 'Editar venta' if mode=='editar' else 'Registrar una venta' }}</h2>
+  <p>Esto es solo para tu control interno. Nunca se muestra en el catálogo público ni afecta tu inventario.</p>
+</div>
+
+<form class="form card-form" method="post">
+  <div class="form-section">
+    <h3>Producto vendido</h3>
+    <label>Elige de tu catálogo (opcional — solo para autocompletar)
+      <select id="catalogPick">
+        <option value="">Otro / venta personalizada</option>
+        {% for o in catalog_options %}
+        <option value="{{ o.ref }}" data-name="{{ o.name }}" data-cost="{{ o.cost }}" data-price="{{ o.sale_price }}"
+          {{ 'selected' if sale and sale.product_ref == o.ref else '' }}>{{ o.ref }} — {{ o.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="row">
+      <label>Producto / descripción*<input id="productName" name="product_name" required placeholder="Ej. Short adidas 3 líneas" value="{{ sale.product_name if sale else '' }}"></label>
+      <label>Cantidad<input name="quantity" type="number" min="1" step="1" value="{{ sale.quantity if sale else 1 }}"></label>
+      <label>Fecha de la venta*<input name="sale_date" type="date" required value="{{ sale.sale_date if sale else today }}"></label>
+    </div>
+    <input type="hidden" id="productRef" name="product_ref" value="{{ sale.product_ref if sale else '' }}">
+  </div>
+
+  <div class="form-section">
+    <h3>Costo, venta y ganancia</h3>
+    <p class="muted">Escribe el costo y el valor de venta totales de esta venta (si eliges un producto arriba, se sugieren solos — puedes cambiarlos).</p>
+    <div class="row">
+      <label>Costo*<input id="costInput" name="cost" type="number" min="0" step="1" required placeholder="$0" value="{{ sale.cost|int if sale else '' }}"></label>
+      <label>Precio de venta*<input id="priceInput" name="sale_price" type="number" min="0" step="1" required placeholder="$0" value="{{ sale.sale_price|int if sale else '' }}"></label>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>Envío / domicilio</h3>
+    <div class="row">
+      <label>Valor del envío<input id="shippingInput" name="shipping_cost" type="number" min="0" step="1" placeholder="$0" value="{{ sale.shipping_cost|int if sale else 0 }}"></label>
+      <label>¿Quién paga el envío?
+        <select id="payerInput" name="shipping_payer">
+          {% for key, label in payer_labels.items() %}
+          <option value="{{ key }}" {{ 'selected' if (sale and sale.shipping_payer == key) or (not sale and key=='ninguno') else '' }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+    <div class="costbox"><span>GANANCIA NETA DE ESTA VENTA</span><strong id="profitPreview">$0</strong></div>
+  </div>
+
+  <div class="form-section">
+    <h3>Datos del cliente</h3>
+    <div class="row">
+      <label>Nombre del cliente<input name="customer_name" placeholder="Nombre completo" value="{{ sale.customer_name if sale else '' }}"></label>
+      <label>Teléfono<input name="customer_phone" placeholder="Ej. 3001234567" value="{{ sale.customer_phone if sale else '' }}"></label>
+      <label>Ciudad / lugar<input name="customer_location" placeholder="Ej. Bogotá" value="{{ sale.customer_location if sale else '' }}"></label>
+    </div>
+    <label>Notas<textarea name="notes" rows="2" placeholder="Cualquier detalle extra (forma de pago, dirección, etc.)">{{ sale.notes if sale else '' }}</textarea></label>
+  </div>
+
+  <div class="form-actions">
+    <a class="secondary" href="{{ url_for('sales_list') }}">Cancelar</a>
+    <button class="primary" type="submit">{{ 'Guardar cambios' if mode=='editar' else 'Registrar venta' }}</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const catalogPick = document.getElementById('catalogPick');
+const productName = document.getElementById('productName');
+const productRef = document.getElementById('productRef');
+const costInput = document.getElementById('costInput');
+const priceInput = document.getElementById('priceInput');
+const shippingInput = document.getElementById('shippingInput');
+const payerInput = document.getElementById('payerInput');
+const profitPreview = document.getElementById('profitPreview');
+
+function money(v){
+  const n = Number(v) || 0;
+  return '$' + Math.round(n).toLocaleString('es-CO');
+}
+
+catalogPick.addEventListener('change', () => {
+  const opt = catalogPick.options[catalogPick.selectedIndex];
+  if (!opt.value) { productRef.value = ''; updateProfit(); return; }
+  productRef.value = opt.value;
+  productName.value = opt.dataset.name || '';
+  costInput.value = Math.round(parseFloat(opt.dataset.cost || 0));
+  priceInput.value = Math.round(parseFloat(opt.dataset.price || 0));
+  updateProfit();
+});
+
+function updateProfit(){
+  const cost = parseFloat(costInput.value || 0);
+  const price = parseFloat(priceInput.value || 0);
+  const shipping = parseFloat(shippingInput.value || 0);
+  const payer = payerInput.value;
+  const shipDeduction = (payer === 'tienda') ? shipping : 0;
+  profitPreview.textContent = money(price - cost - shipDeduction);
+}
+
+[costInput, priceInput, shippingInput].forEach(el => el.addEventListener('input', updateProfit));
+payerInput.addEventListener('change', updateProfit);
+updateProfit();
+</script>
+{% endblock %}

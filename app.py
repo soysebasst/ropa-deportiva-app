@@ -195,6 +195,22 @@ def init_db():
             image TEXT,
             FOREIGN KEY(set_id) REFERENCES sets(id) ON DELETE CASCADE
         );
+        CREATE TABLE IF NOT EXISTS sales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sale_date TEXT NOT NULL,
+            product_ref TEXT DEFAULT '',
+            product_name TEXT NOT NULL,
+            quantity INTEGER NOT NULL DEFAULT 1,
+            cost REAL NOT NULL DEFAULT 0,
+            sale_price REAL NOT NULL DEFAULT 0,
+            shipping_cost REAL NOT NULL DEFAULT 0,
+            shipping_payer TEXT NOT NULL DEFAULT 'ninguno',
+            customer_name TEXT DEFAULT '',
+            customer_phone TEXT DEFAULT '',
+            customer_location TEXT DEFAULT '',
+            notes TEXT DEFAULT '',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
         """
     )
 
@@ -836,6 +852,174 @@ def export_catalog_csv():
 
     csv_bytes = "﻿" + buf.getvalue()  # BOM para que Excel muestre bien las tildes/ñ
     filename = "catalogo_costo_venta_" + now_str().replace(" ", "_").replace(":", "-") + ".csv"
+    return Response(
+        csv_bytes,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# Registro de ventas (solo visible aquí, en el administrador — nunca en el
+# catálogo público. No modifica productos/conjuntos ni su inventario.)
+# ---------------------------------------------------------------------------
+SHIPPING_PAYER_LABELS = {
+    "ninguno": "Sin envío",
+    "tienda": "Yo pago el envío",
+    "cliente": "El cliente paga el envío",
+}
+
+
+def _sale_profit(cost, sale_price, shipping_cost, shipping_payer):
+    ship = float(shipping_cost or 0) if shipping_payer == "tienda" else 0.0
+    return float(sale_price or 0) - float(cost or 0) - ship
+
+
+def _sales_catalog_options(conn):
+    """Lista de productos y conjuntos para autocompletar la venta (solo lectura)."""
+    options = []
+    for p in conn.execute("SELECT reference, name, cost, sale_price FROM products ORDER BY reference"):
+        options.append({"ref": p["reference"], "name": p["name"], "cost": p["cost"], "sale_price": p["sale_price"]})
+    for s in _sets_with_cost(conn):
+        options.append({"ref": s["reference"], "name": s["name"], "cost": s["cost"], "sale_price": s["sale_price"]})
+    return options
+
+
+def _sale_form_values(form):
+    return {
+        "sale_date": form.get("sale_date") or now_str()[:10],
+        "product_ref": form.get("product_ref", "").strip(),
+        "product_name": form.get("product_name", "").strip(),
+        "quantity": int(form.get("quantity") or 1),
+        "cost": float(form.get("cost") or 0),
+        "sale_price": float(form.get("sale_price") or 0),
+        "shipping_cost": float(form.get("shipping_cost") or 0),
+        "shipping_payer": form.get("shipping_payer") or "ninguno",
+        "customer_name": form.get("customer_name", "").strip(),
+        "customer_phone": form.get("customer_phone", "").strip(),
+        "customer_location": form.get("customer_location", "").strip(),
+        "notes": form.get("notes", "").strip(),
+    }
+
+
+@app.route("/ventas")
+def sales_list():
+    conn = db()
+    rows = [dict(r) for r in conn.execute("SELECT * FROM sales ORDER BY date(sale_date) DESC, id DESC").fetchall()]
+    conn.close()
+    for r in rows:
+        r["profit"] = _sale_profit(r["cost"], r["sale_price"], r["shipping_cost"], r["shipping_payer"])
+        r["payer_label"] = SHIPPING_PAYER_LABELS.get(r["shipping_payer"], r["shipping_payer"])
+    return render_template(
+        "sales_list.html",
+        sales=rows,
+        total_sales=len(rows),
+        total_revenue=sum(r["sale_price"] or 0 for r in rows),
+        total_cost=sum(r["cost"] or 0 for r in rows),
+        total_profit=sum(r["profit"] for r in rows),
+    )
+
+
+@app.route("/ventas/nueva", methods=["GET", "POST"])
+def sale_new():
+    conn = db()
+    try:
+        if request.method == "POST":
+            v = _sale_form_values(request.form)
+            if not v["product_name"]:
+                flash("Escribe el nombre del producto vendido.", "error")
+            else:
+                conn.execute(
+                    """INSERT INTO sales(sale_date,product_ref,product_name,quantity,cost,sale_price,
+                       shipping_cost,shipping_payer,customer_name,customer_phone,customer_location,notes,created_at)
+                       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (v["sale_date"], v["product_ref"], v["product_name"], v["quantity"], v["cost"], v["sale_price"],
+                     v["shipping_cost"], v["shipping_payer"], v["customer_name"], v["customer_phone"],
+                     v["customer_location"], v["notes"], now_str()),
+                )
+                conn.commit()
+                flash("Venta registrada correctamente.", "ok")
+                return redirect(url_for("sales_list"))
+
+        return render_template(
+            "sale_form.html", sale=None, mode="nueva",
+            catalog_options=_sales_catalog_options(conn), today=now_str()[:10],
+            payer_labels=SHIPPING_PAYER_LABELS,
+        )
+    finally:
+        conn.close()
+
+
+@app.route("/ventas/<int:said>/editar", methods=["GET", "POST"])
+def sale_edit(said):
+    conn = db()
+    try:
+        sale = conn.execute("SELECT * FROM sales WHERE id=?", (said,)).fetchone()
+        if not sale:
+            flash("La venta no existe.", "error")
+            return redirect(url_for("sales_list"))
+
+        if request.method == "POST":
+            v = _sale_form_values(request.form)
+            if not v["product_name"]:
+                flash("Escribe el nombre del producto vendido.", "error")
+            else:
+                conn.execute(
+                    """UPDATE sales SET sale_date=?, product_ref=?, product_name=?, quantity=?, cost=?, sale_price=?,
+                       shipping_cost=?, shipping_payer=?, customer_name=?, customer_phone=?, customer_location=?, notes=?
+                       WHERE id=?""",
+                    (v["sale_date"], v["product_ref"], v["product_name"], v["quantity"], v["cost"], v["sale_price"],
+                     v["shipping_cost"], v["shipping_payer"], v["customer_name"], v["customer_phone"],
+                     v["customer_location"], v["notes"], said),
+                )
+                conn.commit()
+                flash("Venta actualizada correctamente.", "ok")
+                return redirect(url_for("sales_list"))
+
+        return render_template(
+            "sale_form.html", sale=dict(sale), mode="editar",
+            catalog_options=_sales_catalog_options(conn), today=now_str()[:10],
+            payer_labels=SHIPPING_PAYER_LABELS,
+        )
+    finally:
+        conn.close()
+
+
+@app.route("/ventas/<int:said>/eliminar", methods=["POST"])
+def sale_delete(said):
+    conn = db()
+    try:
+        conn.execute("DELETE FROM sales WHERE id=?", (said,))
+        conn.commit()
+        flash("Venta eliminada.", "ok")
+    finally:
+        conn.close()
+    return redirect(url_for("sales_list"))
+
+
+@app.route("/ventas/exportar.csv")
+def export_sales_csv():
+    conn = db()
+    rows = [dict(r) for r in conn.execute("SELECT * FROM sales ORDER BY date(sale_date) DESC, id DESC").fetchall()]
+    conn.close()
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "Fecha", "Referencia", "Producto", "Cantidad", "Costo", "Precio de venta", "Envío",
+        "Quién paga el envío", "Ganancia neta", "Cliente", "Teléfono", "Ciudad/lugar", "Notas",
+    ])
+    for r in rows:
+        profit = _sale_profit(r["cost"], r["sale_price"], r["shipping_cost"], r["shipping_payer"])
+        writer.writerow([
+            r["sale_date"], r["product_ref"], r["product_name"], r["quantity"],
+            round(r["cost"]), round(r["sale_price"]), round(r["shipping_cost"]),
+            SHIPPING_PAYER_LABELS.get(r["shipping_payer"], r["shipping_payer"]),
+            round(profit), r["customer_name"], r["customer_phone"], r["customer_location"], r["notes"],
+        ])
+
+    csv_bytes = "﻿" + buf.getvalue()
+    filename = "ventas_" + now_str().replace(" ", "_").replace(":", "-") + ".csv"
     return Response(
         csv_bytes,
         mimetype="text/csv",

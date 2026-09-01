@@ -1,6 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, session, Response, send_file, after_this_request
-import csv, io, zipfile, tempfile
-from PIL import Image
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, session, Response
+import csv, io
 from werkzeug.utils import secure_filename
 from pathlib import Path
 from datetime import datetime
@@ -858,84 +857,6 @@ def export_catalog_csv():
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
-
-
-@app.route("/exportar/imagenes.zip")
-def export_images_zip():
-    """Descarga todas las fotos (principales y de cada color) organizadas en
-    carpetas por referencia, para poder compartirlas fuera de la app (ej. para
-    armar una lista mayorista con fotos). Solo lee archivos, no modifica nada
-    (las fotos originales guardadas en el sitio quedan intactas).
-
-    Cada foto se reduce a un tamaño razonable (máx. 1000px de lado) y se
-    comprime como JPG antes de meterla en el ZIP, para que el archivo final
-    pese mucho menos — útil porque muchos servicios (incluyendo esta
-    conversación) rechazan archivos de más de cierto tamaño."""
-    MAX_DIM = 1000
-    JPEG_QUALITY = 80
-
-    def resized_jpeg_bytes(path):
-        try:
-            with Image.open(path) as im:
-                im = im.convert("RGB")
-                w, h = im.size
-                scale = min(1.0, MAX_DIM / float(max(w, h)))
-                if scale < 1.0:
-                    im = im.resize((max(1, round(w * scale)), max(1, round(h * scale))), Image.LANCZOS)
-                out = io.BytesIO()
-                im.save(out, format="JPEG", quality=JPEG_QUALITY, optimize=True)
-                return out.getvalue()
-        except Exception:
-            return None
-
-    conn = db()
-    products = [dict(r) for r in conn.execute("SELECT * FROM products ORDER BY reference")]
-    sets_ = [dict(r) for r in conn.execute("SELECT * FROM sets ORDER BY reference")]
-
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".zip", dir=str(DATA_DIR))
-    tmp.close()
-    try:
-        with zipfile.ZipFile(tmp.name, "w", zipfile.ZIP_STORED) as zf:
-            def add_image(folder, label, filename):
-                if not filename:
-                    return
-                src = UPLOADS / filename
-                if not src.exists():
-                    return
-                data = resized_jpeg_bytes(src)
-                if data is not None:
-                    zf.writestr(f"{folder}/{label}.jpg", data)
-                else:
-                    # Si no se pudo procesar (formato raro/archivo dañado), se
-                    # incluye el archivo original tal cual, sin comprimir.
-                    ext = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
-                    zf.write(src, f"{folder}/{label}.{ext}")
-
-            for p in products:
-                folder = secure_filename(f"{p['reference']} - {p['name']}")
-                add_image(folder, "principal", p.get("image"))
-                for c in conn.execute("SELECT * FROM colors WHERE product_id=? ORDER BY id", (p["id"],)):
-                    add_image(folder, f"color - {c['color']}", c["image"])
-
-            for s in sets_:
-                folder = secure_filename(f"{s['reference']} - {s['name']}")
-                add_image(folder, "principal", s.get("image"))
-                for c in conn.execute("SELECT * FROM set_colors WHERE set_id=? ORDER BY id", (s["id"],)):
-                    add_image(folder, f"color - {c['color']}", c["image"])
-    finally:
-        conn.close()
-
-    filename = "imagenes_" + now_str().replace(" ", "_").replace(":", "-") + ".zip"
-
-    @after_this_request
-    def _cleanup(response):
-        try:
-            os.remove(tmp.name)
-        except OSError:
-            pass
-        return response
-
-    return send_file(tmp.name, mimetype="application/zip", as_attachment=True, download_name=filename)
 
 
 # ---------------------------------------------------------------------------

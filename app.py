@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, session, Response, send_file, after_this_request
 import csv, io, zipfile, tempfile
+from PIL import Image
 from werkzeug.utils import secure_filename
 from pathlib import Path
 from datetime import datetime
@@ -863,11 +864,30 @@ def export_catalog_csv():
 def export_images_zip():
     """Descarga todas las fotos (principales y de cada color) organizadas en
     carpetas por referencia, para poder compartirlas fuera de la app (ej. para
-    armar una lista mayorista con fotos). Solo lee archivos, no modifica nada.
+    armar una lista mayorista con fotos). Solo lee archivos, no modifica nada
+    (las fotos originales guardadas en el sitio quedan intactas).
 
-    Se escribe a un archivo temporal en disco (no en memoria) y sin recomprimir
-    las imágenes (ZIP_STORED, ya vienen comprimidas como JPG/PNG) para que
-    tome el menor tiempo y memoria posible con catálogos grandes."""
+    Cada foto se reduce a un tamaño razonable (máx. 1000px de lado) y se
+    comprime como JPG antes de meterla en el ZIP, para que el archivo final
+    pese mucho menos — útil porque muchos servicios (incluyendo esta
+    conversación) rechazan archivos de más de cierto tamaño."""
+    MAX_DIM = 1000
+    JPEG_QUALITY = 80
+
+    def resized_jpeg_bytes(path):
+        try:
+            with Image.open(path) as im:
+                im = im.convert("RGB")
+                w, h = im.size
+                scale = min(1.0, MAX_DIM / float(max(w, h)))
+                if scale < 1.0:
+                    im = im.resize((max(1, round(w * scale)), max(1, round(h * scale))), Image.LANCZOS)
+                out = io.BytesIO()
+                im.save(out, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+                return out.getvalue()
+        except Exception:
+            return None
+
     conn = db()
     products = [dict(r) for r in conn.execute("SELECT * FROM products ORDER BY reference")]
     sets_ = [dict(r) for r in conn.execute("SELECT * FROM sets ORDER BY reference")]
@@ -882,8 +902,14 @@ def export_images_zip():
                 src = UPLOADS / filename
                 if not src.exists():
                     return
-                ext = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
-                zf.write(src, f"{folder}/{label}.{ext}")
+                data = resized_jpeg_bytes(src)
+                if data is not None:
+                    zf.writestr(f"{folder}/{label}.jpg", data)
+                else:
+                    # Si no se pudo procesar (formato raro/archivo dañado), se
+                    # incluye el archivo original tal cual, sin comprimir.
+                    ext = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
+                    zf.write(src, f"{folder}/{label}.{ext}")
 
             for p in products:
                 folder = secure_filename(f"{p['reference']} - {p['name']}")

@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, session, Response
-import csv, io, zipfile
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, session, Response, send_file, after_this_request
+import csv, io, zipfile, tempfile
 from werkzeug.utils import secure_filename
 from pathlib import Path
 from datetime import datetime
@@ -863,42 +863,53 @@ def export_catalog_csv():
 def export_images_zip():
     """Descarga todas las fotos (principales y de cada color) organizadas en
     carpetas por referencia, para poder compartirlas fuera de la app (ej. para
-    armar una lista mayorista con fotos). Solo lee archivos, no modifica nada."""
+    armar una lista mayorista con fotos). Solo lee archivos, no modifica nada.
+
+    Se escribe a un archivo temporal en disco (no en memoria) y sin recomprimir
+    las imágenes (ZIP_STORED, ya vienen comprimidas como JPG/PNG) para que
+    tome el menor tiempo y memoria posible con catálogos grandes."""
     conn = db()
     products = [dict(r) for r in conn.execute("SELECT * FROM products ORDER BY reference")]
     sets_ = [dict(r) for r in conn.execute("SELECT * FROM sets ORDER BY reference")]
 
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-        def add_image(folder, label, filename):
-            if not filename:
-                return
-            src = UPLOADS / filename
-            if not src.exists():
-                return
-            ext = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
-            zf.write(src, f"{folder}/{label}.{ext}")
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".zip", dir=str(DATA_DIR))
+    tmp.close()
+    try:
+        with zipfile.ZipFile(tmp.name, "w", zipfile.ZIP_STORED) as zf:
+            def add_image(folder, label, filename):
+                if not filename:
+                    return
+                src = UPLOADS / filename
+                if not src.exists():
+                    return
+                ext = filename.rsplit(".", 1)[-1] if "." in filename else "jpg"
+                zf.write(src, f"{folder}/{label}.{ext}")
 
-        for p in products:
-            folder = secure_filename(f"{p['reference']} - {p['name']}")
-            add_image(folder, "principal", p.get("image"))
-            for c in conn.execute("SELECT * FROM colors WHERE product_id=? ORDER BY id", (p["id"],)):
-                add_image(folder, f"color - {c['color']}", c["image"])
+            for p in products:
+                folder = secure_filename(f"{p['reference']} - {p['name']}")
+                add_image(folder, "principal", p.get("image"))
+                for c in conn.execute("SELECT * FROM colors WHERE product_id=? ORDER BY id", (p["id"],)):
+                    add_image(folder, f"color - {c['color']}", c["image"])
 
-        for s in sets_:
-            folder = secure_filename(f"{s['reference']} - {s['name']}")
-            add_image(folder, "principal", s.get("image"))
-            for c in conn.execute("SELECT * FROM set_colors WHERE set_id=? ORDER BY id", (s["id"],)):
-                add_image(folder, f"color - {c['color']}", c["image"])
+            for s in sets_:
+                folder = secure_filename(f"{s['reference']} - {s['name']}")
+                add_image(folder, "principal", s.get("image"))
+                for c in conn.execute("SELECT * FROM set_colors WHERE set_id=? ORDER BY id", (s["id"],)):
+                    add_image(folder, f"color - {c['color']}", c["image"])
+    finally:
+        conn.close()
 
-    conn.close()
-    buf.seek(0)
     filename = "imagenes_" + now_str().replace(" ", "_").replace(":", "-") + ".zip"
-    return Response(
-        buf.getvalue(),
-        mimetype="application/zip",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
-    )
+
+    @after_this_request
+    def _cleanup(response):
+        try:
+            os.remove(tmp.name)
+        except OSError:
+            pass
+        return response
+
+    return send_file(tmp.name, mimetype="application/zip", as_attachment=True, download_name=filename)
 
 
 # ---------------------------------------------------------------------------

@@ -178,7 +178,27 @@
   document.getElementById('qtyMinus').addEventListener('click', () => { qty = Math.max(1, qty - 1); qtyValue.textContent = qty; });
   document.getElementById('qtyPlus').addEventListener('click', () => { qty = qty + 1; qtyValue.textContent = qty; });
 
+  function flashRequired(el) {
+    if (!el) return;
+    el.classList.add('pdp-required-flash');
+    setTimeout(() => el.classList.remove('pdp-required-flash'), 900);
+  }
+
   document.getElementById('addToOrderBtn').addEventListener('click', () => {
+    const needsColor = item.colors && item.colors.length > 0;
+    const needsSize = item.type !== 'conjunto' && item.sizes && item.sizes.length > 0;
+
+    if (needsColor && !selectedColor) {
+      SWCart.toast('Selecciona un color antes de agregar.');
+      flashRequired(document.getElementById('pdpColors'));
+      return;
+    }
+    if (needsSize && !selectedSize) {
+      SWCart.toast('Selecciona una talla antes de agregar.');
+      flashRequired(document.getElementById('pdpSizes'));
+      return;
+    }
+
     SWCart.add({ type: item.type, ref: item.ref, color: selectedColor || '', talla: selectedSize || '', qty: qty });
     SWCart.toast(`${item.ref} agregado a tu pedido`);
   });

@@ -3,6 +3,16 @@
 {% block og_title %}{{ brand.brand_name }} — Catálogo{% endblock %}
 
 {% block subheader %}
+{% if brand.banner_image %}
+<div class="home-banner">
+  <div class="home-banner-bg" style="background-image:url('{{ url_for('uploaded_file', filename=brand.banner_image) }}')"></div>
+  <div class="home-banner-inner">
+    {% if brand.banner_title %}<h1 class="home-banner-title">{{ brand.banner_title }}</h1>{% endif %}
+    {% if brand.banner_subtitle %}<p class="home-banner-subtitle">{{ brand.banner_subtitle }}</p>{% endif %}
+    <a class="pub-btn pub-btn-solid pub-btn-lg home-banner-cta" href="#pubGrid">{{ brand.banner_cta_text or 'Ver catálogo' }}</a>
+  </div>
+</div>
+{% endif %}
 <div class="cat-nav-wrap">
   <div class="cat-nav" id="catNav">
     <button class="cat-chip active" data-cat="">TODOS</button>
@@ -10,13 +20,6 @@
     <button class="cat-chip" data-cat="{{ c.name }}">{{ c.name|upper }}</button>
     {% endfor %}
   </div>
-  <select class="sort-select" id="sortSelect">
-    <option value="recientes">Más recientes</option>
-    <option value="precio_asc">Precio: menor a mayor</option>
-    <option value="precio_desc">Precio: mayor a menor</option>
-    <option value="nombre_asc">Nombre A-Z</option>
-    <option value="nombre_desc">Nombre Z-A</option>
-  </select>
 </div>
 {% endblock %}
 
@@ -61,23 +64,10 @@
   const grid = document.getElementById('pubGrid');
   const cards = Array.from(grid.querySelectorAll('.pub-card'));
   const catNav = document.getElementById('catNav');
-  const sortSelect = document.getElementById('sortSelect');
   let activeCat = '';
 
-  function applyFilterSort(){
-    const order = sortSelect.value;
-    let visible = cards.filter(c => !activeCat || c.dataset.category === activeCat);
-    let hidden = cards.filter(c => activeCat && c.dataset.category !== activeCat);
-    hidden.forEach(c => c.style.display = 'none');
-
-    visible.sort((a,b) => {
-      if (order === 'precio_asc') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
-      if (order === 'precio_desc') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
-      if (order === 'nombre_asc') return a.dataset.name.localeCompare(b.dataset.name);
-      if (order === 'nombre_desc') return b.dataset.name.localeCompare(a.dataset.name);
-      return (b.dataset.updated||'').localeCompare(a.dataset.updated||''); // recientes
-    });
-    visible.forEach(c => { c.style.display=''; grid.appendChild(c); });
+  function applyFilter(){
+    cards.forEach(c => { c.style.display = (!activeCat || c.dataset.category === activeCat) ? '' : 'none'; });
   }
 
   catNav.addEventListener('click', (e) => {
@@ -86,9 +76,8 @@
     catNav.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeCat = btn.dataset.cat;
-    applyFilterSort();
+    applyFilter();
   });
-  sortSelect.addEventListener('change', applyFilterSort);
 })();
 </script>
 {% endblock %}

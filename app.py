@@ -64,7 +64,7 @@ if ADMIN_PASSWORD == _default_admin_pass:
 # Rutas que cualquiera puede ver sin iniciar sesión: el catálogo público,
 # su API de solo lectura, las imágenes subidas, los archivos estáticos y la
 # propia pantalla de login. Todo lo demás exige haber iniciado sesión.
-PUBLIC_PATH_PREFIXES = ("/catalogo", "/api/catalogo", "/uploads/", "/static/", "/login")
+PUBLIC_PATH_PREFIXES = ("/catalogo", "/api/catalogo", "/mayoristas", "/uploads/", "/static/", "/login")
 
 
 @app.before_request
@@ -112,6 +112,14 @@ DEFAULT_SETTINGS = {
     "short_description": "Catálogo oficial de sportswear_ST: ropa deportiva moderna para tu día a día.",
     "instagram_url": "",
     "whatsapp_number": "",
+    # Banner grande de la portada del catálogo público
+    "banner_image": "",
+    "banner_title": "NUEVA COLECCIÓN",
+    "banner_subtitle": "Ropa deportiva para tu estilo.",
+    "banner_cta_text": "Ver catálogo",
+    # Catálogo mayorista (/mayoristas)
+    "wholesale_min_qty": "6",
+    "wholesale_note": "",
 }
 
 
@@ -218,6 +226,7 @@ def init_db():
     _add_column(conn, "products", "description", "TEXT DEFAULT ''")
     _add_column(conn, "products", "updated_at", "TEXT")
     _add_column(conn, "products", "published", "INTEGER NOT NULL DEFAULT 1")
+    _add_column(conn, "products", "wholesale_price", "REAL NOT NULL DEFAULT 0")
     _add_column(conn, "sets", "description", "TEXT DEFAULT ''")
     _add_column(conn, "sets", "updated_at", "TEXT")
     _add_column(conn, "sets", "published", "INTEGER NOT NULL DEFAULT 1")
@@ -437,14 +446,15 @@ def product_new():
             description = request.form.get("description", "").strip()
             cost = float(request.form.get("cost") or 0)
             sale = float(request.form.get("sale_price") or 0)
+            wholesale = float(request.form.get("wholesale_price") or 0)
             sizes = normalize_sizes(request.form.get("sizes", ""))
             published = 1 if request.form.get("published") else 0
             image = save_image(request.files.get("image"))
             try:
                 cur = conn.execute(
-                    """INSERT INTO products(reference,category,name,description,cost,sale_price,sizes,image,created_at,updated_at,published)
-                       VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
-                    (reference, category, name, description, cost, sale, sizes, image, now_str(), now_str(), published),
+                    """INSERT INTO products(reference,category,name,description,cost,sale_price,wholesale_price,sizes,image,created_at,updated_at,published)
+                       VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (reference, category, name, description, cost, sale, wholesale, sizes, image, now_str(), now_str(), published),
                 )
                 product_id = cur.lastrowid
                 colors = request.form.getlist("color")
@@ -498,6 +508,7 @@ def product_edit(pid):
             description = request.form.get("description", "").strip()
             cost = float(request.form.get("cost") or 0)
             sale = float(request.form.get("sale_price") or 0)
+            wholesale = float(request.form.get("wholesale_price") or 0)
             sizes = normalize_sizes(request.form.get("sizes", ""))
             published = 1 if request.form.get("published") else 0
 
@@ -507,8 +518,8 @@ def product_edit(pid):
             try:
                 conn.execute(
                     """UPDATE products SET reference=?, category=?, name=?, description=?, cost=?,
-                       sale_price=?, sizes=?, image=?, updated_at=?, published=? WHERE id=?""",
-                    (reference, category, name, description, cost, sale, sizes, image_value, now_str(), published, pid),
+                       sale_price=?, wholesale_price=?, sizes=?, image=?, updated_at=?, published=? WHERE id=?""",
+                    (reference, category, name, description, cost, sale, wholesale, sizes, image_value, now_str(), published, pid),
                 )
 
                 # Colores existentes: actualizar, reemplazar imagen si se sube una nueva, o eliminar
@@ -643,7 +654,6 @@ def set_new():
             name = request.form["set_name"].strip()
             description = request.form.get("set_description", "").strip()
             sale = float(request.form.get("set_sale_price") or 0)
-            sizes = normalize_sizes(request.form.get("set_sizes", ""))
             published = 1 if request.form.get("published") else 0
             image = save_image(request.files.get("set_image"))
             product_ids = request.form.getlist("set_product_id")
@@ -652,7 +662,7 @@ def set_new():
                 cur = conn.execute(
                     """INSERT INTO sets(reference,name,description,sale_price,image,updated_at,sizes,published)
                        VALUES(?,?,?,?,?,?,?,?)""",
-                    (reference, name, description, sale, image, now_str(), sizes, published),
+                    (reference, name, description, sale, image, now_str(), "", published),
                 )
                 sid = cur.lastrowid
                 for i, pid in enumerate(product_ids):
@@ -719,7 +729,6 @@ def set_edit(sid):
             name = request.form["set_name"].strip()
             description = request.form.get("set_description", "").strip()
             sale = float(request.form.get("set_sale_price") or 0)
-            sizes = normalize_sizes(request.form.get("set_sizes", ""))
             published = 1 if request.form.get("published") else 0
             new_image = save_image(request.files.get("set_image"))
             image_value = new_image if new_image else s["image"]
@@ -729,7 +738,7 @@ def set_edit(sid):
                 conn.execute(
                     """UPDATE sets SET reference=?, name=?, description=?, sale_price=?, image=?,
                        updated_at=?, sizes=?, published=? WHERE id=?""",
-                    (reference, name, description, sale, image_value, now_str(), sizes, published, sid),
+                    (reference, name, description, sale, image_value, now_str(), "", published, sid),
                 )
                 conn.execute("DELETE FROM set_items WHERE set_id=?", (sid,))
                 for i, pid in enumerate(product_ids):
@@ -1101,7 +1110,11 @@ def settings_page():
             if accent_color:
                 conn.execute("INSERT INTO settings(key,value) VALUES('accent_color',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (accent_color,))
 
-            for key in ("tagline", "short_description", "instagram_url", "whatsapp_number"):
+            for key in (
+                "tagline", "short_description", "instagram_url", "whatsapp_number",
+                "banner_title", "banner_subtitle", "banner_cta_text",
+                "wholesale_min_qty", "wholesale_note",
+            ):
                 val = request.form.get(key, "").strip()
                 conn.execute(
                     "INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
@@ -1115,6 +1128,14 @@ def settings_page():
                     conn.execute("INSERT INTO settings(key,value) VALUES('logo',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (logo_name,))
                 else:
                     flash("El logo debe ser una imagen PNG, JPG, WEBP, GIF o SVG.", "error")
+
+            banner_file = request.files.get("banner_image")
+            if banner_file and banner_file.filename:
+                banner_name = save_image(banner_file)
+                if banner_name:
+                    conn.execute("INSERT INTO settings(key,value) VALUES('banner_image',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (banner_name,))
+                else:
+                    flash("La imagen del banner debe ser PNG, JPG, WEBP o GIF.", "error")
 
             conn.commit()
             flash("Configuración guardada.", "ok")
@@ -1197,7 +1218,9 @@ def public_catalog_items(conn):
             "image": image_url(s["image"]),
             "images": images,
             "colors": [{"name": c["color"], "image": image_url(c["image"])} for c in colors],
-            "sizes": [t.strip() for t in (s["sizes"] or "").split(",") if t.strip()],
+            # Los conjuntos no piden talla propia: cada prenda que los compone ya
+            # tiene su talla (visible en "Incluye"), así que aquí siempre va vacío.
+            "sizes": [],
             "updated": s["updated_at"] or "",
             "includes": [{"ref": it["reference"], "name": it["name"], "sale_price": it["sale_price"], "quantity": it["quantity"]} for it in set_items],
             "url": url_for("catalog_product", reference=s["reference"]),
@@ -1246,6 +1269,166 @@ def api_catalog_items():
     finally:
         conn.close()
     return jsonify(items)
+
+
+# ---------------------------------------------------------------------------
+# Catálogo mayorista (solo lectura, con precio al por mayor en vez de precio
+# de venta al público). Un producto o conjunto solo aparece aquí una vez que
+# tiene un precio mayorista definido (mayor a 0) — así nunca se muestra un
+# $0 por error mientras no lo has configurado.
+# ---------------------------------------------------------------------------
+def wholesale_catalog_items(conn):
+    items = []
+
+    products = conn.execute(
+        "SELECT * FROM products WHERE published=1 AND wholesale_price > 0 ORDER BY category, reference"
+    ).fetchall()
+    for p in products:
+        colors = conn.execute("SELECT * FROM colors WHERE product_id=? ORDER BY id", (p["id"],)).fetchall()
+        images = []
+        if p["image"]:
+            images.append(image_url(p["image"]))
+        for c in colors:
+            if c["image"]:
+                u = image_url(c["image"])
+                if u not in images:
+                    images.append(u)
+        items.append({
+            "type": "producto",
+            "ref": p["reference"],
+            "name": p["name"],
+            "category": p["category"],
+            "price": p["wholesale_price"],
+            "image": image_url(p["image"]),
+            "images": images,
+            "colors": [{"name": c["color"], "image": image_url(c["image"])} for c in colors],
+            "sizes": [t.strip() for t in (p["sizes"] or "").split(",") if t.strip()],
+            "includes": [],
+            "url": url_for("mayorista_product", reference=p["reference"]),
+        })
+
+    sets_ = conn.execute("SELECT * FROM sets WHERE published=1 ORDER BY reference").fetchall()
+    for s in sets_:
+        set_items = _set_items_detail(conn, s["id"])
+        if not set_items:
+            continue
+        wholesale_map = {row["reference"]: row["wholesale_price"] for row in conn.execute("SELECT reference, wholesale_price FROM products")}
+        # Precio mayorista del conjunto = suma del precio mayorista de cada
+        # prenda que lo compone (por su cantidad). Si a alguna prenda le falta
+        # precio mayorista, el conjunto tampoco se muestra todavía.
+        missing = any(not wholesale_map.get(it["reference"]) for it in set_items)
+        if missing:
+            continue
+        wholesale_total = sum(wholesale_map.get(it["reference"], 0) * (it["quantity"] or 1) for it in set_items)
+        colors = _set_colors(conn, s["id"])
+        images = []
+        if s["image"]:
+            images.append(image_url(s["image"]))
+        for c in colors:
+            if c["image"]:
+                u = image_url(c["image"])
+                if u not in images:
+                    images.append(u)
+        items.append({
+            "type": "conjunto",
+            "ref": s["reference"],
+            "name": s["name"],
+            "category": "Conjuntos",
+            "price": wholesale_total,
+            "image": image_url(s["image"]),
+            "images": images,
+            "colors": [{"name": c["color"], "image": image_url(c["image"])} for c in colors],
+            "sizes": [],
+            "includes": [{"ref": it["reference"], "name": it["name"], "quantity": it["quantity"]} for it in set_items],
+            "url": url_for("mayorista_product", reference=s["reference"]),
+        })
+    return items
+
+
+@app.route("/mayoristas")
+def mayoristas_catalog():
+    conn = db()
+    try:
+        items = wholesale_catalog_items(conn)
+        categories = get_categories(conn)
+        settings_ = get_settings(conn)
+    finally:
+        conn.close()
+    return render_template(
+        "mayoristas_list.html", items=items, categories=categories,
+        min_qty=settings_.get("wholesale_min_qty") or "6",
+        wholesale_note=settings_.get("wholesale_note") or "",
+    )
+
+
+@app.route("/mayoristas/producto/<reference>")
+def mayorista_product(reference):
+    conn = db()
+    try:
+        items = wholesale_catalog_items(conn)
+        settings_ = get_settings(conn)
+    finally:
+        conn.close()
+    ref_upper = reference.strip().upper()
+    item = next((it for it in items if it["ref"].upper() == ref_upper), None)
+    return render_template(
+        "mayoristas_product.html", item=item, items=items,
+        min_qty=settings_.get("wholesale_min_qty") or "6",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Importar precios al por mayor desde un CSV (columnas: reference,wholesale_price)
+# Útil para cargar de una vez los precios de muchas referencias sin escribirlos
+# uno por uno en el formulario de cada producto.
+# ---------------------------------------------------------------------------
+@app.post("/productos/importar-mayorista")
+def import_wholesale_prices():
+    file = request.files.get("wholesale_csv")
+    if not file or not file.filename:
+        flash("Selecciona un archivo CSV para importar.", "error")
+        return redirect(request.referrer or url_for("products_list"))
+
+    try:
+        text = file.stream.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        flash("No se pudo leer el archivo. Debe ser un CSV de texto (UTF-8).", "error")
+        return redirect(request.referrer or url_for("products_list"))
+
+    reader = csv.DictReader(io.StringIO(text))
+    fieldmap = {(name or "").strip().lower(): name for name in (reader.fieldnames or [])}
+    ref_col = fieldmap.get("reference") or fieldmap.get("referencia") or fieldmap.get("ref")
+    price_col = fieldmap.get("wholesale_price") or fieldmap.get("precio_mayorista") or fieldmap.get("precio mayorista")
+    if not ref_col or not price_col:
+        flash("El CSV debe tener las columnas 'reference' y 'wholesale_price' (o 'referencia' y 'precio_mayorista').", "error")
+        return redirect(request.referrer or url_for("products_list"))
+
+    conn = db()
+    updated, not_found = 0, []
+    try:
+        for row in reader:
+            ref = (row.get(ref_col) or "").strip().upper()
+            price_raw = (row.get(price_col) or "").strip().replace("$", "").replace(".", "").replace(",", "")
+            if not ref:
+                continue
+            try:
+                price = float(price_raw or 0)
+            except ValueError:
+                continue
+            cur = conn.execute("UPDATE products SET wholesale_price=? WHERE UPPER(reference)=?", (price, ref))
+            if cur.rowcount:
+                updated += 1
+            else:
+                not_found.append(ref)
+        conn.commit()
+    finally:
+        conn.close()
+
+    msg = f"Precios mayoristas actualizados en {updated} producto(s)."
+    if not_found:
+        msg += f" No se encontraron estas referencias: {', '.join(not_found[:15])}" + (" ..." if len(not_found) > 15 else "")
+    flash(msg, "ok" if updated else "error")
+    return redirect(request.referrer or url_for("products_list"))
 
 
 # ---------------------------------------------------------------------------

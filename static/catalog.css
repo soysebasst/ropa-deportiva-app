@@ -11,6 +11,7 @@
   --shadow-soft:0 14px 34px rgba(17,18,23,.08);
 }
 *{box-sizing:border-box}
+html{scroll-behavior:smooth}
 .pub-body{
   margin:0; background:var(--white); color:var(--ink);
   font-family:'Inter',system-ui,Arial,sans-serif;
@@ -37,6 +38,20 @@
   border-bottom:1px solid var(--line); padding:14px 20px;
 }
 .pub-header-inner{display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:1200px; margin:0 auto}
+.pub-header-actions{display:flex; align-items:center; gap:8px}
+.pub-wholesale-btn{
+  flex:0 0 auto; display:none; align-items:center; text-decoration:none; color:var(--ink);
+  border:1.5px solid var(--line); background:#fff; border-radius:99px; padding:10px 14px;
+  font:800 11px 'Inter',sans-serif; letter-spacing:.02em; transition:.15s;
+}
+.pub-wholesale-btn:hover{border-color:var(--blue); color:var(--blue)}
+@media(min-width:480px){.pub-wholesale-btn{display:inline-flex}}
+.pub-back-link{
+  flex:0 0 auto; display:inline-flex; align-items:center; text-decoration:none; color:var(--ink);
+  border:1.5px solid var(--line); background:#fff; border-radius:99px; padding:10px 16px;
+  font:800 11px 'Inter',sans-serif; letter-spacing:.02em;
+}
+.pub-back-link:hover{border-color:var(--blue); color:var(--blue)}
 .pub-brand{display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); min-width:0}
 .pub-brand-text{min-width:0}
 .pub-brand-name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
@@ -46,10 +61,10 @@
 .pub-brand-name{font-family:'Anton',Impact,sans-serif; font-size:22px; letter-spacing:.4px}
 .pub-tagline{font-size:11px; color:var(--muted); font-weight:600; margin-top:2px}
 
-/* ---------------- navegación de categorías + orden ---------------- */
+/* ---------------- navegación de categorías ---------------- */
 .cat-nav-wrap{
   position:sticky; top:70px; z-index:20; background:#fff; border-bottom:1px solid var(--line);
-  padding:12px 20px; display:flex; gap:12px; align-items:center; justify-content:space-between;
+  padding:12px 20px; display:flex; gap:12px; align-items:center;
 }
 .cat-nav{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; flex:1}
 .cat-nav::-webkit-scrollbar{display:none}
@@ -59,10 +74,53 @@
   transition:.15s;
 }
 .cat-chip.active{background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 8px 18px rgba(45,66,255,.28)}
-.sort-select{
-  border:1.5px solid var(--line); background:var(--soft); border-radius:99px; padding:10px 14px;
-  font:700 11px 'Inter',sans-serif; color:var(--ink); outline:0; flex:0 0 auto; max-width:160px;
+
+/* ---------------- banner grande de portada ---------------- */
+.home-banner{
+  position:relative; overflow:hidden; margin:0; background:linear-gradient(135deg,var(--ink),#26283a);
+  min-height:280px; display:flex; align-items:center; justify-content:center; text-align:center;
 }
+.home-banner-bg{
+  position:absolute; inset:0; background-size:cover; background-position:center;
+  transform:scale(1.08); animation:bannerZoom 14s ease-in-out infinite alternate;
+}
+.home-banner::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg,rgba(12,12,15,.35),rgba(12,12,15,.65));
+}
+.home-banner-inner{position:relative; z-index:2; padding:64px 20px; max-width:720px; margin:0 auto}
+.home-banner-eyebrow{
+  display:inline-block; color:#fff; font:800 10px 'Inter',sans-serif; letter-spacing:.22em;
+  padding:6px 14px; border:1px solid rgba(255,255,255,.5); border-radius:99px; margin-bottom:16px;
+  opacity:0; animation:bannerFadeUp .7s ease .05s forwards;
+}
+.home-banner-title{
+  font-family:'Anton',Impact,sans-serif; font-weight:400; text-transform:uppercase; color:#fff;
+  font-size:clamp(32px,7vw,64px); line-height:1.02; margin:0 0 14px; letter-spacing:.01em;
+  opacity:0; animation:bannerFadeUp .7s ease .18s forwards;
+  text-shadow:0 4px 24px rgba(0,0,0,.35);
+}
+.home-banner-subtitle{
+  color:rgba(255,255,255,.92); font-size:15px; font-weight:600; margin:0 0 26px;
+  opacity:0; animation:bannerFadeUp .7s ease .3s forwards;
+}
+.home-banner-cta{
+  opacity:0; animation:bannerFadeUp .7s ease .42s forwards;
+}
+@keyframes bannerFadeUp{from{opacity:0; transform:translateY(18px)} to{opacity:1; transform:translateY(0)}}
+@keyframes bannerZoom{from{transform:scale(1.08)} to{transform:scale(1.16)}}
+@media(prefers-reduced-motion:reduce){
+  .home-banner-bg{animation:none}
+  .home-banner-eyebrow,.home-banner-title,.home-banner-subtitle,.home-banner-cta{animation:none; opacity:1}
+}
+@media(min-width:720px){.home-banner{min-height:380px}.home-banner-inner{padding:90px 20px}}
+
+/* ---------------- catálogo mayorista ---------------- */
+.wholesale-strip{
+  background:var(--ink); color:#fff; text-align:center; padding:10px 16px; font:800 11px 'Inter',sans-serif;
+  letter-spacing:.06em;
+}
+.wholesale-strip strong{color:var(--lav)}
 
 /* ---------------- contenido general ---------------- */
 .pub-main{max-width:1200px; margin:0 auto; padding:20px 16px 40px}
@@ -114,6 +172,14 @@
 .pdp-block{margin-bottom:18px}
 #elegir{border-radius:14px; transition:background .3s ease, box-shadow .3s ease}
 #elegir.pdp-choose-highlight{background:rgba(45,66,255,.07); box-shadow:0 0 0 3px rgba(45,66,255,.25); padding:12px; margin:-12px -12px 6px}
+.pdp-required-flash{animation:requiredShake .5s ease}
+@keyframes requiredShake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
 .pdp-label{display:block; font-size:10px; font-weight:800; letter-spacing:.12em; color:var(--muted); margin-bottom:9px; text-transform:uppercase}
 .pdp-sizes{display:flex; gap:8px; flex-wrap:wrap}
 .size-pill{border:1.5px solid var(--line); background:#fff; border-radius:10px; padding:11px 16px; font:800 13px 'Inter',sans-serif; cursor:pointer}

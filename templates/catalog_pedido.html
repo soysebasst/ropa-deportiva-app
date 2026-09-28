@@ -65,12 +65,16 @@
     rows.forEach((r, index) => {
       const row = document.createElement('div');
       row.className = 'pedido-item';
+      const variantParts = [];
+      if (r.hasColors) variantParts.push('Color: ' + (r.line.color || 'Por seleccionar'));
+      if (r.hasSizes) variantParts.push('Talla: ' + (r.line.talla || 'Por seleccionar'));
+      const variantText = variantParts.length ? variantParts.join(' · ') : '';
       row.innerHTML = `
         <div class="pedido-item-img">${r.image ? `<img src="${r.image}" alt="${r.name}">` : '<div class="pub-placeholder small">SIN IMAGEN</div>'}</div>
         <div class="pedido-item-info">
           <div class="pedido-item-ref">${r.line.ref}</div>
           <div class="pedido-item-name">${r.name}</div>
-          <div class="pedido-item-variant">Color: ${r.line.color || 'Por seleccionar'} · Talla: ${r.line.talla || 'Por seleccionar'}</div>
+          ${variantText ? `<div class="pedido-item-variant">${variantText}</div>` : ''}
           <div class="pedido-item-price">${SWCart.money(r.price)} c/u</div>
         </div>
         <div class="pedido-item-qty">

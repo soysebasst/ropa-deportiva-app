@@ -29,12 +29,7 @@
     <div id="setItems"></div>
     <button type="button" class="secondary" onclick="addSetItem()">+ Agregar referencia</button>
     <div class="costbox"><span>COSTO DEL CONJUNTO</span><strong id="setCost">$0</strong></div>
-  </div>
-
-  <div class="form-section">
-    <h3>Tallas del conjunto</h3>
-    <p class="muted">Las tallas en las que se vende el conjunto completo (independientes de las prendas que lo componen).</p>
-    <label>Tallas<input name="set_sizes" placeholder="XS, S, M, L, XL" value="{{ set.sizes if set else '' }}"></label>
+    <div class="costbox"><span>PRECIO MAYORISTA (suma automática)</span><strong id="setWholesale">$0</strong></div>
   </div>
 
   <div class="form-section">
@@ -95,7 +90,7 @@ function addSetItem(selectedProductId, qty){
   let opts='<option value="">Selecciona una referencia</option>';
   products.forEach(p=>{
     const sel = (selectedProductId && String(selectedProductId)===String(p.id)) ? 'selected' : '';
-    opts += `<option value="${p.id}" data-cost="${p.cost}" ${sel}>${p.reference} — ${p.name} (${p.category}) — $${Number(p.cost).toLocaleString('es-CO')}</option>`;
+    opts += `<option value="${p.id}" data-cost="${p.cost}" data-wholesale="${p.wholesale_price||0}" ${sel}>${p.reference} — ${p.name} (${p.category}) — $${Number(p.cost).toLocaleString('es-CO')}</option>`;
   });
   d.innerHTML = `<select name="set_product_id" onchange="calcSet()" required>${opts}</select><input name="set_quantity" type="number" min="1" value="${qty||1}" onchange="calcSet()" required><button type="button" class="danger small" onclick="this.parentElement.remove();calcSet()">Quitar</button>`;
   document.getElementById('setItems').appendChild(d);
@@ -103,12 +98,15 @@ function addSetItem(selectedProductId, qty){
 }
 
 function calcSet(){
-  let total=0;
+  let total=0, wholesale=0;
   document.querySelectorAll('.setrow').forEach(r=>{
     const s=r.querySelector('select'), q=r.querySelector('input'), opt=s.options[s.selectedIndex];
-    total += (parseFloat(opt && opt.dataset.cost || 0) || 0) * (parseInt(q.value||1) || 1);
+    const qty = parseInt(q.value||1) || 1;
+    total += (parseFloat(opt && opt.dataset.cost || 0) || 0) * qty;
+    wholesale += (parseFloat(opt && opt.dataset.wholesale || 0) || 0) * qty;
   });
   document.getElementById('setCost').textContent = '$' + Math.round(total).toLocaleString('es-CO');
+  document.getElementById('setWholesale').textContent = '$' + Math.round(wholesale).toLocaleString('es-CO');
 }
 
 if (existingItems && existingItems.length){

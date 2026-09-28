@@ -38,13 +38,27 @@
     </div>
   </div>
 
-  <div class="form-section" style="border-bottom:0">
+  <div class="form-section">
     <h3>Colores de marca</h3>
     <p class="muted">Estos colores se usan en botones, acentos y elementos destacados de toda la aplicación y del catálogo.</p>
     <div class="row">
       <label>Color principal<input type="color" name="primary_color_picker" value="{{ brand.primary_color }}" onchange="document.getElementById('primary_color').value=this.value"><input type="hidden" id="primary_color" name="primary_color" value="{{ brand.primary_color }}"></label>
       <label>Color de contraste<input type="color" name="accent_color_picker" value="{{ brand.accent_color }}" onchange="document.getElementById('accent_color').value=this.value"><input type="hidden" id="accent_color" name="accent_color" value="{{ brand.accent_color }}"></label>
     </div>
+  </div>
+
+  <div class="form-section" style="border-bottom:0">
+    <h3>Banner grande de la portada</h3>
+    <p class="muted">Se muestra al tope de tu catálogo público, antes de las prendas — como en las tiendas grandes.</p>
+    {% if brand.banner_image %}
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.banner_image) }}" style="max-height:120px;object-fit:cover"><span>Imagen actual del banner — sube una nueva para reemplazarla.</span></div>
+    {% endif %}
+    <label class="filebox"><input name="banner_image" type="file" accept="image/*"><span>{{ 'Reemplazar imagen del banner' if brand.banner_image else 'Subir imagen del banner' }}</span><small>Idealmente horizontal y de buena resolución (JPG, PNG, WEBP o GIF)</small></label>
+    <div class="row" style="margin-top:10px">
+      <label>Título del banner<input name="banner_title" placeholder="NUEVA COLECCIÓN" value="{{ brand.banner_title }}"></label>
+      <label>Subtítulo<input name="banner_subtitle" placeholder="Ropa deportiva para tu estilo." value="{{ brand.banner_subtitle }}"></label>
+    </div>
+    <label>Texto del botón<input name="banner_cta_text" placeholder="Ver catálogo" value="{{ brand.banner_cta_text }}"></label>
   </div>
 
   <div class="form-actions">
@@ -56,5 +70,27 @@
   <h3 style="margin-top:0">Enlace de tu catálogo público</h3>
   <p class="muted">Este es el enlace que puedes compartir con tus clientes por WhatsApp o Instagram.</p>
   <a class="primary" href="{{ url_for('public_catalog') }}" target="_blank" rel="noopener">{{ request.url_root }}catalogo ↗</a>
+</div>
+
+<div class="card-form" style="max-width:640px;margin-top:20px">
+  <h3 style="margin-top:0">Catálogo mayorista</h3>
+  <p class="muted">Un catálogo aparte, en <strong>{{ request.url_root }}mayoristas</strong>, con precio al por mayor. Un producto o conjunto solo aparece ahí cuando le defines un "Precio mayorista" mayor a $0 (en Productos → editar). El de un conjunto se calcula solo, sumando el precio mayorista de sus prendas.</p>
+  <a class="primary" href="{{ url_for('mayoristas_catalog') }}" target="_blank" rel="noopener">{{ request.url_root }}mayoristas ↗</a>
+
+  <form method="post" action="{{ url_for('settings_page') }}" style="margin-top:18px">
+    <div class="row">
+      <label>Pedido mínimo (unidades)<input name="wholesale_min_qty" type="number" min="1" step="1" value="{{ brand.wholesale_min_qty }}"></label>
+    </div>
+    <label>Nota adicional (opcional)<textarea name="wholesale_note" rows="2" placeholder="Ej. Precios válidos por pedidos desde 6 unidades.">{{ brand.wholesale_note }}</textarea></label>
+    <div class="form-actions"><button class="primary" type="submit">Guardar</button></div>
+  </form>
+
+  <hr style="border:0;border-top:1px solid var(--line, #2a2a35);margin:18px 0">
+  <h3 style="margin-top:0">Importar precios mayoristas desde CSV</h3>
+  <p class="muted">Sube un CSV con las columnas <code>reference</code> y <code>wholesale_price</code> (o <code>referencia</code> y <code>precio_mayorista</code>) para actualizar muchas referencias de una vez, en vez de escribirlas una por una.</p>
+  <form method="post" action="{{ url_for('import_wholesale_prices') }}" enctype="multipart/form-data">
+    <label class="filebox"><input name="wholesale_csv" type="file" accept=".csv" required><span>Selecciona el archivo CSV</span></label>
+    <div class="form-actions"><button class="primary" type="submit">Importar</button></div>
+  </form>
 </div>
 {% endblock %}

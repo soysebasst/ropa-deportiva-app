@@ -1,0 +1,73 @@
+{% extends "base_public.html" %}
+{% block meta_title %}Lista mayorista | {{ brand.brand_name }}{% endblock %}
+{% block og_title %}Lista mayorista | {{ brand.brand_name }}{% endblock %}
+{% block meta_description %}Precios al por mayor de {{ brand.brand_name }}.{% endblock %}
+
+{% block header_actions %}
+<a class="pub-back-link" href="{{ url_for('public_catalog') }}">← Volver a la tienda</a>
+{% endblock %}
+
+{% block subheader %}
+<div class="wholesale-strip">
+  LISTA MAYORISTA · Pedido mínimo <strong>{{ min_qty }}</strong> unidades
+  {% if wholesale_note %} · {{ wholesale_note }}{% endif %}
+</div>
+<div class="cat-nav-wrap">
+  <div class="cat-nav" id="catNav">
+    <button class="cat-chip active" data-cat="">TODOS</button>
+    {% for c in categories %}
+    <button class="cat-chip" data-cat="{{ c.name }}">{{ c.name|upper }}</button>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="pub-grid" id="pubGrid">
+{% for it in items %}
+  <article class="pub-card" data-category="{{ it.category }}">
+    <a href="{{ it.url }}" class="pub-card-imgwrap">
+      {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
+      <span class="pub-cat-chip">{{ it.category }}</span>
+    </a>
+    <div class="pub-card-body">
+      <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+      <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
+      <div class="pub-card-price">{{ it.price|money }}</div>
+      {% if it.colors %}
+      <div class="pub-colors">
+        {% for c in it.colors %}<span class="pub-dot" style="background:{{ c.name|colorhex }}" title="{{ c.name }}"></span>{% endfor %}
+      </div>
+      {% endif %}
+      <div class="pub-card-actions">
+        <a class="pub-btn pub-btn-outline pub-btn-block" href="{{ it.url }}">Ver detalle</a>
+      </div>
+    </div>
+  </article>
+{% else %}
+  <div class="pub-empty">Todavía no hay productos con precio mayorista definido.</div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const grid = document.getElementById('pubGrid');
+  const cards = Array.from(grid.querySelectorAll('.pub-card'));
+  const catNav = document.getElementById('catNav');
+  let activeCat = '';
+  function applyFilter(){
+    cards.forEach(c => { c.style.display = (!activeCat || c.dataset.category === activeCat) ? '' : 'none'; });
+  }
+  catNav.addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-chip');
+    if (!btn) return;
+    catNav.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    applyFilter();
+  });
+})();
+</script>
+{% endblock %}

@@ -7,6 +7,10 @@
 <meta name="description" content="{% block meta_description %}{{ brand.short_description }}{% endblock %}">
 <meta name="robots" content="index, follow">
 
+{% set fav = url_for('uploaded_file', filename=brand.logo) if brand.logo else url_for('static', filename='favicon.png') %}
+<link rel="icon" type="image/png" href="{{ fav }}">
+<link rel="apple-touch-icon" href="{{ fav }}">
+
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{{ brand.brand_name }}">
 <meta property="og:title" content="{% block og_title %}{{ brand.brand_name }} — Catálogo{% endblock %}">
@@ -36,11 +40,16 @@
         {% if brand.tagline %}<span class="pub-tagline">{{ brand.tagline }}</span>{% endif %}
       </span>
     </a>
-    <a class="cart-fab" href="{{ url_for('catalog_pedido') }}" id="cartFab">
-      <span class="cart-fab-icon">🛍</span>
-      <span class="cart-fab-label">MI PEDIDO</span>
-      <span class="cart-fab-count" id="cartFabCount">0</span>
-    </a>
+    <div class="pub-header-actions">
+      {% block header_actions %}
+      <a class="pub-wholesale-btn" href="{{ url_for('mayoristas_catalog') }}">Mayoristas</a>
+      <a class="cart-fab" href="{{ url_for('catalog_pedido') }}" id="cartFab">
+        <span class="cart-fab-icon">🛍</span>
+        <span class="cart-fab-label">MI PEDIDO</span>
+        <span class="cart-fab-count" id="cartFabCount">0</span>
+      </a>
+      {% endblock %}
+    </div>
   </div>
 </header>
 

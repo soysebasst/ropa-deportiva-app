@@ -110,6 +110,8 @@
         price: item ? item.price : 0,
         image: item ? (item.image || (item.images && item.images[0])) : null,
         url: item ? item.url : null,
+        hasColors: !!(item && item.colors && item.colors.length),
+        hasSizes: !!(item && item.type !== "conjunto" && item.sizes && item.sizes.length),
       };
     });
   }
@@ -158,8 +160,8 @@
     text += "Quiero consultar por el siguiente pedido:\n\n";
     lines.forEach(function (r, i) {
       text += (i + 1) + ". " + r.line.ref + " - " + r.name + "\n";
-      text += "Color: " + (r.line.color || "Por seleccionar") + "\n";
-      text += "Talla: " + (r.line.talla || "Por seleccionar") + "\n";
+      if (r.hasColors) text += "Color: " + (r.line.color || "Por seleccionar") + "\n";
+      if (r.hasSizes) text += "Talla: " + (r.line.talla || "Por seleccionar") + "\n";
       text += "Cantidad: " + r.line.qty + "\n";
       if (r.line.qty > 1) {
         text += "Precio unitario: " + money(r.price) + "\n\n";
@@ -179,8 +181,8 @@
     text += "Estoy interesado/a en:\n";
     text += item.ref + "\n";
     text += item.name + "\n";
-    text += "Color: " + (color || "Por seleccionar") + "\n";
-    text += "Talla: " + (talla || "Por seleccionar") + "\n";
+    if (item.colors && item.colors.length) text += "Color: " + (color || "Por seleccionar") + "\n";
+    if (item.type !== "conjunto" && item.sizes && item.sizes.length) text += "Talla: " + (talla || "Por seleccionar") + "\n";
     text += "Precio: " + money(item.price) + "\n\n";
     text += "Quisiera más información.";
     return text;

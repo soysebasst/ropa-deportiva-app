@@ -40,12 +40,12 @@ html{scroll-behavior:smooth}
 .pub-header-inner{display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:1200px; margin:0 auto}
 .pub-header-actions{display:flex; align-items:center; gap:8px}
 .pub-wholesale-btn{
-  flex:0 0 auto; display:none; align-items:center; text-decoration:none; color:var(--ink);
-  border:1.5px solid var(--line); background:#fff; border-radius:99px; padding:10px 14px;
-  font:800 11px 'Inter',sans-serif; letter-spacing:.02em; transition:.15s;
+  flex:0 0 auto; display:inline-flex; align-items:center; text-decoration:none; color:var(--ink);
+  border:1.5px solid var(--line); background:#fff; border-radius:99px; padding:8px 10px;
+  font:800 10px 'Inter',sans-serif; letter-spacing:.02em; transition:.15s; white-space:nowrap;
 }
 .pub-wholesale-btn:hover{border-color:var(--blue); color:var(--blue)}
-@media(min-width:480px){.pub-wholesale-btn{display:inline-flex}}
+@media(min-width:480px){.pub-wholesale-btn{padding:10px 14px; font-size:11px}}
 .pub-back-link{
   flex:0 0 auto; display:inline-flex; align-items:center; text-decoration:none; color:var(--ink);
   border:1.5px solid var(--line); background:#fff; border-radius:99px; padding:10px 16px;

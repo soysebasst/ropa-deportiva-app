@@ -267,3 +267,129 @@ html{scroll-behavior:smooth}
   .pub-main{padding:16px 12px 30px}
   .pedido-item{grid-template-columns:48px 1fr auto auto; gap:8px; padding:9px}
 }
+
+/* =========================================================
+   CAPA DE PULIDO — diseño y movimiento (taste-skill + Emil Kowalski)
+   Todo lo de aquí abajo es aditivo: refina lo anterior sin cambiar
+   la estructura ni la lógica del catálogo.
+   ========================================================= */
+:root{
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-in-out:cubic-bezier(.77,0,.175,1);
+  --shadow-card:0 18px 40px -18px rgba(20,24,60,.28);
+}
+
+/* ---- sensación nativa en celular ---- */
+.pub-body{-webkit-tap-highlight-color:transparent; text-rendering:optimizeLegibility}
+.pub-btn,.cat-chip,.size-pill,.color-swatch,.pdp-thumb,.qty-stepper button,.qty-btn,
+.pedido-item-remove,.cart-fab,.pub-wholesale-btn,.pub-back-link{
+  touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.pub-header{padding-top:max(14px, env(safe-area-inset-top)); padding-left:max(20px, env(safe-area-inset-left)); padding-right:max(20px, env(safe-area-inset-right))}
+.pub-footer{padding-bottom:max(30px, calc(env(safe-area-inset-bottom) + 20px))}
+.sw-toast{bottom:max(24px, calc(env(safe-area-inset-bottom) + 16px))}
+@media(max-width:600px){
+  .pub-header{padding-top:max(12px, env(safe-area-inset-top)); padding-left:max(16px, env(safe-area-inset-left)); padding-right:max(16px, env(safe-area-inset-right))}
+}
+
+/* ---- tipografía ---- */
+.pdp-title,.home-banner-title,.pedido-title{text-wrap:balance}
+.pub-card-name,.pdp-description,.pedido-sub,.pub-footer-note{text-wrap:pretty}
+.pub-card-price,.pdp-price,.pedido-total-row strong,.pedido-item-price,
+.pdp-include-price,.cart-fab-count,.qty-stepper span{font-variant-numeric:tabular-nums}
+.pdp-title{letter-spacing:.005em}
+.pdp-description{max-width:62ch}
+
+/* ---- foco visible (teclado) ---- */
+.pub-body :focus-visible{outline:2.5px solid var(--blue); outline-offset:3px; border-radius:inherit}
+.pub-body a:focus-visible,.pub-body button:focus-visible{border-radius:99px}
+.pub-card-imgwrap:focus-visible{border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+
+/* ---- botones: transiciones específicas + presión ---- */
+.pub-btn{transition:transform 160ms var(--ease-out), box-shadow 200ms ease, background-color 200ms ease, opacity 160ms ease, color 200ms ease}
+.pub-btn:active{transform:scale(.97)}
+.cat-chip{transition:transform 160ms var(--ease-out), background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease}
+.cat-chip:active{transform:scale(.96)}
+.size-pill{transition:transform 160ms var(--ease-out), background-color 180ms ease, border-color 180ms ease, color 180ms ease}
+.size-pill:active{transform:scale(.96)}
+.color-swatch{transition:transform 160ms var(--ease-out)}
+.color-swatch:active{transform:scale(.95)}
+.color-swatch img,.color-swatch-dot{transition:border-color 180ms ease, box-shadow 220ms var(--ease-out)}
+.color-swatch-text{transition:transform 160ms var(--ease-out), background-color 180ms ease, border-color 180ms ease, color 180ms ease}
+.pdp-thumb{transition:transform 160ms var(--ease-out), border-color 180ms ease}
+.pdp-thumb:active{transform:scale(.95)}
+.qty-stepper button,.qty-btn{transition:transform 120ms var(--ease-out), background-color 160ms ease}
+.qty-stepper button:active,.qty-btn:active{transform:scale(.9)}
+.pedido-item-remove{transition:color 160ms ease, transform 120ms var(--ease-out)}
+.pedido-item-remove:active{transform:scale(.88)}
+.cart-fab,.pub-wholesale-btn,.pub-back-link{transition:transform 160ms var(--ease-out), border-color 180ms ease, color 180ms ease, box-shadow 200ms ease}
+.pub-wholesale-btn:active,.pub-back-link:active{transform:scale(.96)}
+
+/* ---- barra de categorías alineada con la cuadrícula ---- */
+.cat-nav{max-width:1168px; margin:-6px auto; padding:6px 2px 8px}
+.cat-nav-wrap{padding-top:9px; padding-bottom:9px}
+
+/* ---- tarjetas ---- */
+.pub-card{transition:transform 260ms var(--ease-out), box-shadow 260ms var(--ease-out), border-color 200ms ease}
+.pub-card:hover{transform:none; box-shadow:none}
+.pub-card-imgwrap img{transition:transform 600ms var(--ease-out)}
+.pub-card-actions{margin-top:auto; padding-top:8px}
+.pub-card-price{letter-spacing:.01em}
+
+@media (hover:hover) and (pointer:fine){
+  .pub-card:hover{transform:translateY(-4px); box-shadow:var(--shadow-card); border-color:transparent}
+  .pub-card:hover .pub-card-imgwrap img{transform:scale(1.04)}
+  .pub-btn-solid:hover{box-shadow:0 14px 28px rgba(45,66,255,.34)}
+  .pub-btn-outline:hover{border-color:var(--ink)}
+  .cat-chip:not(.active):hover{border-color:var(--ink)}
+  .size-pill:not(.active):hover,.color-swatch-text:not(.active):hover{border-color:var(--ink)}
+  .cart-fab:hover{box-shadow:0 12px 26px rgba(0,0,0,.24)}
+  .pub-card-name:hover{color:var(--blue)}
+}
+
+/* tarjetas en celular: "Agregar" a lo ancho y "Ver producto" como enlace (sin texto partido) */
+@media (max-width:479px){
+  .pub-card-actions{flex-direction:column-reverse; gap:2px}
+  .pub-card-actions .pub-btn{flex:none; width:100%; white-space:nowrap}
+  .pub-card-actions .pub-btn-outline{
+    background:transparent; border:0; box-shadow:none; padding:9px 6px 2px;
+    color:var(--muted); font-weight:700; text-decoration:underline; text-underline-offset:3px;
+  }
+  .pub-card-body{padding:11px 11px 13px}
+  .pub-card-name{font-size:13.5px}
+}
+
+/* ---- aparición escalonada (solo si hay JS y movimiento permitido) ---- */
+.js-motion .pub-grid .pub-card:not(.reveal-in){opacity:0; transform:translateY(14px)}
+.js-motion .pub-card.reveal-in{opacity:1; transform:none;
+  transition:opacity 520ms var(--ease-out), transform 520ms var(--ease-out), box-shadow 260ms var(--ease-out), border-color 200ms ease;
+  transition-delay:var(--reveal-delay,0ms), var(--reveal-delay,0ms), 0ms, 0ms}
+
+/* ---- contador del pedido: rebote al agregar ---- */
+@keyframes swBadgeBump{0%{transform:scale(1)}35%{transform:scale(1.35)}100%{transform:scale(1)}}
+.cart-fab-count.bump{animation:swBadgeBump 420ms var(--ease-out)}
+.cart-fab-count{transition:background-color 200ms ease, opacity 200ms ease}
+
+/* ---- botón "Agregar al pedido": estado de confirmación ---- */
+.pub-btn.is-added{background:var(--ink); box-shadow:0 10px 24px rgba(12,12,15,.22)}
+.pub-btn .btn-label{display:inline-block; transition:opacity 180ms ease, transform 220ms var(--ease-out), filter 180ms ease}
+.pub-btn .btn-label.swapping{opacity:0; transform:translateY(4px); filter:blur(2px)}
+
+/* ---- toast: entra desde abajo con curva fuerte, sale rápido ---- */
+.sw-toast{transition:opacity 220ms var(--ease-out), transform 320ms var(--ease-out); transform:translate(-50%,16px) scale(.98)}
+.sw-toast.show{transform:translate(-50%,0) scale(1)}
+
+/* ---- imagen principal de producto ---- */
+.pdp-main-image{position:relative}
+.pdp-main-image img{will-change:auto}
+
+/* ---- "Mi pedido" ---- */
+.pedido-item{transition:background-color 200ms ease}
+.pedido-summary{box-shadow:0 24px 50px -20px rgba(12,12,15,.45)}
+
+@media (prefers-reduced-motion:reduce){
+  .js-motion .pub-grid .pub-card:not(.reveal-in){opacity:1; transform:none}
+  .pub-card,.pub-card-imgwrap img,.pub-btn,.cat-chip,.size-pill,.color-swatch,.sw-toast{transition-property:opacity, background-color, border-color, color, box-shadow}
+  .cart-fab-count.bump{animation:none}
+  .pub-btn:active,.cat-chip:active,.size-pill:active,.color-swatch:active{transform:none}
+}

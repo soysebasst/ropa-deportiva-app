@@ -26,6 +26,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='catalog.css') }}">
 <style>:root{--lav:{{ brand.primary_color or '#97a2ff' }};--blue:{{ brand.accent_color or '#2d42ff' }};}</style>
+<script>
+/* Activa la animación de entrada antes de pintar (evita parpadeo). Si el JS del
+   catálogo no carga en 2.5 s, se desactiva para que nunca quede contenido oculto. */
+(function(d){try{if(window.matchMedia('(prefers-reduced-motion: reduce)').matches||!('IntersectionObserver' in window))return;
+d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.classList.remove('js-motion');},2500);}catch(e){}})(document.documentElement);
+</script>
+<meta name="theme-color" content="#ffffff">
 {% block extra_head %}{% endblock %}
 </head>
 <body class="pub-body">

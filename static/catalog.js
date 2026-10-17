@@ -76,6 +76,8 @@
       lines.push({ type: entry.type, ref: entry.ref, color: entry.color || "", talla: entry.talla || "", qty: entry.qty || 1 });
     }
     save(lines);
+    // Aviso para la capa de animación (botón "✓ Agregado", rebote del contador).
+    try { document.dispatchEvent(new CustomEvent("swcart:add", { detail: entry })); } catch (e) { /* navegador antiguo */ }
     return lines;
   }
 
@@ -124,10 +126,19 @@
     return resolved().reduce(function (sum, r) { return sum + (r.price || 0) * (r.line.qty || 0); }, 0);
   }
 
+  var lastBadgeCount = null;
   function updateBadge() {
     var count = totalCount();
+    var grew = lastBadgeCount !== null && count > lastBadgeCount;
+    lastBadgeCount = count;
     document.querySelectorAll("#cartFabCount, .cart-fab-count").forEach(function (el) {
       el.textContent = count;
+      if (grew) {
+        // Rebote corto del contador cuando se agrega algo al pedido.
+        el.classList.remove("bump");
+        void el.offsetWidth;
+        el.classList.add("bump");
+      }
     });
     document.querySelectorAll("#cartFab, .cart-fab").forEach(function (el) {
       el.classList.toggle("has-items", count > 0);
@@ -229,3 +240,144 @@
 
   document.addEventListener("DOMContentLoaded", updateBadge);
 })(window);
+
+/* =========================================================
+   CAPA DE MOVIMIENTO — aditiva, no cambia la lógica del pedido.
+   Principios: animar solo transform/opacity, curvas fuertes de salida,
+   menos de 300 ms en interacciones y respeto por "reducir movimiento".
+   ========================================================= */
+(function () {
+  "use strict";
+  window.__swMotionReady = true;
+
+  var EASE_OUT = "cubic-bezier(.23,1,.32,1)";
+  var reduceMotion = false;
+  try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { reduceMotion = false; }
+  var canAnimate = !!(Element.prototype.animate) && !reduceMotion;
+
+  function ready(fn) {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  }
+
+  // ---- 1. Revelado escalonado de tarjetas al hacer scroll -----------------
+  function setupReveal() {
+    var cards = Array.prototype.slice.call(document.querySelectorAll(".pub-grid .pub-card"));
+    if (!cards.length) return;
+    var root = document.documentElement;
+    if (!canAnimate || !("IntersectionObserver" in window)) {
+      root.classList.remove("js-motion");
+      return;
+    }
+    root.classList.add("js-motion");
+
+    function show(card, delay) {
+      card.style.setProperty("--reveal-delay", delay + "ms");
+      card.classList.add("reveal-in");
+      // Al terminar se quita el retraso para que el hover responda al instante.
+      setTimeout(function () { card.style.removeProperty("--reveal-delay"); }, 560 + delay);
+    }
+
+    var batch = 0, batchTimer = null;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        io.unobserve(entry.target);
+        show(entry.target, Math.min(batch, 8) * 55);
+        batch++;
+      });
+      clearTimeout(batchTimer);
+      batchTimer = setTimeout(function () { batch = 0; }, 120);
+    }, { rootMargin: "0px 0px -6% 0px", threshold: 0.08 });
+
+    cards.forEach(function (c) { io.observe(c); });
+  }
+
+  // ---- 2. Filtro de categorías: las tarjetas visibles entran suave --------
+  function setupFilterMotion() {
+    var nav = document.getElementById("catNav");
+    var grid = document.getElementById("pubGrid");
+    if (!nav || !grid) return;
+    nav.addEventListener("click", function (e) {
+      var chip = e.target.closest(".cat-chip");
+      if (!chip) return;
+      // Lleva el chip activo a la vista en la barra horizontal (celular).
+      try { chip.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", inline: "center", block: "nearest" }); } catch (err) { /* sin soporte */ }
+      if (!canAnimate) return;
+      // El filtro original ya se aplicó en este mismo clic; animamos lo que quedó visible.
+      requestAnimationFrame(function () {
+        var visible = Array.prototype.filter.call(grid.querySelectorAll(".pub-card"), function (c) {
+          return c.style.display !== "none";
+        });
+        visible.forEach(function (card, i) {
+          card.classList.add("reveal-in");
+          card.animate(
+            [{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "translateY(0)" }],
+            { duration: 260, delay: Math.min(i, 10) * 25, easing: EASE_OUT, fill: "backwards" }
+          );
+        });
+      });
+    });
+  }
+
+  // ---- 3. Foto principal: crossfade con blur al cambiar color/miniatura ----
+  function setupImageCrossfade() {
+    var img = document.getElementById("pdpMainImage");
+    if (!img || !canAnimate || !("MutationObserver" in window)) return;
+    var mo = new MutationObserver(function (muts) {
+      for (var i = 0; i < muts.length; i++) {
+        if (muts[i].attributeName !== "src" || muts[i].oldValue === img.getAttribute("src")) continue;
+        var run = function () {
+          img.animate(
+            [{ opacity: 0.35, filter: "blur(6px)", transform: "scale(1.015)" },
+             { opacity: 1, filter: "blur(0px)", transform: "scale(1)" }],
+            { duration: 240, easing: EASE_OUT }
+          );
+        };
+        if (img.complete) run(); else img.addEventListener("load", run, { once: true });
+        break;
+      }
+    });
+    mo.observe(img, { attributes: true, attributeFilter: ["src"], attributeOldValue: true });
+  }
+
+  // ---- 4. "Agregar al pedido": el botón confirma con "✓ Agregado" ---------
+  function setupAddedState() {
+    var btn = document.getElementById("addToOrderBtn");
+    if (!btn) return;
+    var original = btn.textContent.trim();
+    btn.textContent = "";
+    var label = document.createElement("span");
+    label.className = "btn-label";
+    label.textContent = original;
+    btn.appendChild(label);
+    var timer = null;
+
+    function swapTo(text, added) {
+      if (!canAnimate) {
+        label.textContent = text;
+        btn.classList.toggle("is-added", added);
+        return;
+      }
+      label.classList.add("swapping");
+      setTimeout(function () {
+        label.textContent = text;
+        btn.classList.toggle("is-added", added);
+        label.classList.remove("swapping");
+      }, 140);
+    }
+
+    document.addEventListener("swcart:add", function () {
+      clearTimeout(timer);
+      swapTo("✓ Agregado", true);
+      timer = setTimeout(function () { swapTo(original, false); }, 1600);
+    });
+  }
+
+  ready(function () {
+    setupReveal();
+    setupFilterMotion();
+    setupImageCrossfade();
+    setupAddedState();
+  });
+})();

@@ -293,6 +293,26 @@
     cards.forEach(function (c) { io.observe(c); });
   }
 
+  // ---- 1b. Revelado genérico (tarjeta flotante, encabezados de sección) ---
+  function setupGenericReveal() {
+    var els = Array.prototype.slice.call(document.querySelectorAll(".reveal-up"));
+    if (!els.length) return;
+    var root = document.documentElement;
+    if (!canAnimate || !("IntersectionObserver" in window)) {
+      root.classList.remove("js-motion");
+      return;
+    }
+    root.classList.add("js-motion");
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        io.unobserve(entry.target);
+        entry.target.classList.add("reveal-in");
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    els.forEach(function (el) { io.observe(el); });
+  }
+
   // ---- 2. Filtro de categorías: las tarjetas visibles entran suave --------
   function setupFilterMotion() {
     var nav = document.getElementById("catNav");
@@ -376,6 +396,7 @@
 
   ready(function () {
     setupReveal();
+    setupGenericReveal();
     setupFilterMotion();
     setupImageCrossfade();
     setupAddedState();

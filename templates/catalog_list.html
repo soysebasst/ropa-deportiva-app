@@ -7,9 +7,16 @@
 <div class="home-banner">
   <div class="home-banner-bg" style="background-image:url('{{ url_for('uploaded_file', filename=brand.banner_image) }}')"></div>
   <div class="home-banner-inner">
+    <span class="home-banner-eyebrow">NUEVA TEMPORADA</span>
     {% if brand.banner_title %}<h1 class="home-banner-title">{{ brand.banner_title }}</h1>{% endif %}
     {% if brand.banner_subtitle %}<p class="home-banner-subtitle">{{ brand.banner_subtitle }}</p>{% endif %}
     <a class="pub-btn pub-btn-solid pub-btn-lg home-banner-cta" href="#pubGrid">{{ brand.banner_cta_text or 'Ver catálogo' }}</a>
+  </div>
+</div>
+<div class="pub-float-card reveal-up">
+  <div class="pub-float-card-inner">
+    <span class="pub-float-card-icon">{{ (brand.brand_name or 'S')[:1]|upper }}</span>
+    <span class="pub-float-card-text">{{ brand.tagline or 'Ropa deportiva para tu estilo.' }}<br><strong>Escríbenos y arma tu pedido hoy mismo.</strong></span>
   </div>
 </div>
 {% endif %}
@@ -22,12 +29,18 @@
   </div>
 </div>
 {% if brand.statement_text %}
-<div class="pub-statement"><p class="pub-statement-text">{{ brand.statement_text }}</p></div>
+<div class="pub-marquee">
+  <div class="pub-marquee-track">
+    {% for i in range(6) %}<span class="pub-marquee-item">{{ brand.statement_text }}</span>{% endfor %}
+  </div>
+</div>
 {% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="pub-section-head"><h2>Catálogo</h2></div>
+<div class="pub-section-head reveal-up">
+  <div><span class="pub-section-eyebrow">Explora</span><h2>Catálogo</h2></div>
+</div>
 <div class="pub-grid" id="pubGrid">
 {% for it in items %}
   <article class="pub-card"
@@ -36,14 +49,14 @@
     <a href="{{ it.url }}" class="pub-card-imgwrap">
       {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
       <span class="pub-cat-chip">{{ it.category }}</span>
+      {% if it.type == 'conjunto' and it.savings and it.savings > 0 %}
+      <span class="pub-ribbon">Ahorras {{ it.savings|money }}</span>
+      {% endif %}
     </a>
     <div class="pub-card-body">
       <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
       <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
       <div class="pub-card-price">{{ it.price|money }}</div>
-      {% if it.type == 'conjunto' and it.savings and it.savings > 0 %}
-      <div class="pub-savings-chip">Ahorras {{ it.savings|money }}</div>
-      {% endif %}
       {% if it.sizes %}<div class="pub-sizes">{{ it.sizes|join(' · ') }}</div>{% endif %}
       {% if it.colors %}
       <div class="pub-colors">

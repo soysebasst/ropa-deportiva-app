@@ -1295,7 +1295,7 @@ def landing_categories(conn, items, limit=6):
             "name": c["name"],
             "count": len(in_cat),
             "image": image,
-            "url": url_for("public_catalog") + "#pubGrid",
+            "url": url_for("public_catalog", cat=c["name"]) + "#pubGrid",
         })
     return out[:limit]
 

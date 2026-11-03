@@ -39,7 +39,7 @@
       {% if it.sizes %}<div class="pub-sizes">{{ it.sizes|join(' · ') }}</div>{% endif %}
       {% if it.colors %}
       <div class="pub-colors">
-        {% for c in it.colors %}<span class="pub-dot" style="background:{{ c.name|colorhex }}" title="{{ c.name }}"></span>{% endfor %}
+        {% for c in it.colors %}<span class="pub-dot" style="background:{{ c.name|colorhex }}" title="{{ c.name }}" data-img="{{ c.image or '' }}"></span>{% endfor %}
       </div>
       {% endif %}
       <div class="pub-card-actions">
@@ -73,6 +73,38 @@
     btn.classList.add('active');
     activeCat = btn.dataset.cat;
     applyFilter();
+  });
+
+  // Si llegamos con ?cat=NombreCategoria en la URL (desde "Explora por
+  // categoría" en el inicio), preseleccionamos ese chip y filtramos de una vez.
+  const initialCat = new URLSearchParams(window.location.search).get('cat');
+  if (initialCat) {
+    const match = Array.from(catNav.querySelectorAll('.cat-chip')).find(b => b.dataset.cat === initialCat);
+    if (match) {
+      catNav.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+      match.classList.add('active');
+      activeCat = initialCat;
+      applyFilter();
+    }
+  }
+
+  // Al hacer clic/tocar un color, mostramos la foto de esa variante directo
+  // en la tarjeta (sin entrar al producto). Funciona igual con mouse o con
+  // dedo en móvil, a diferencia del hover que no existe en pantallas táctiles.
+  cards.forEach(card => {
+    const img = card.querySelector('.pub-card-imgwrap img');
+    const dots = card.querySelectorAll('.pub-dot');
+    if (!img || !dots.length) return;
+    dots.forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!dot.dataset.img) return;
+        img.src = dot.dataset.img;
+        dots.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+      });
+    });
   });
 })();
 </script>

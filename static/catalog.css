@@ -164,21 +164,21 @@ html{scroll-behavior:smooth}
 
 /* ---------------- tarjeta flotante sobre el banner ---------------- */
 .pub-float-card{
-  position:relative; z-index:3; max-width:1240px; margin:-46px auto 0; padding:0 20px;
+  position:relative; z-index:3; max-width:1240px; margin:-26px auto 0; padding:0 20px;
   display:flex; justify-content:center;
 }
 .pub-float-card-inner{
-  background:var(--surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-card);
+  background:var(--surface); border-radius:var(--radius-lg); box-shadow:0 20px 44px rgba(10,10,15,.22);
   padding:16px 20px; display:flex; align-items:center; gap:14px; max-width:520px;
   border:1px solid var(--line);
 }
 .pub-float-card-icon{
-  width:40px; height:40px; border-radius:50%; background:var(--lav); color:var(--ink); flex:0 0 auto;
+  width:40px; height:40px; border-radius:50%; background:var(--blue); color:#fff; flex:0 0 auto;
   display:flex; align-items:center; justify-content:center; font-family:'Archivo',Impact,sans-serif; font-weight:900; font-style:italic; font-size:16px;
 }
 .pub-float-card-text{font-size:12.5px; color:var(--fg); font-weight:600; line-height:1.4}
 .pub-float-card-text strong{color:var(--blue)}
-@media(max-width:600px){.pub-float-card{margin-top:-34px}.pub-float-card-inner{padding:13px 16px; gap:10px}.pub-float-card-text{font-size:11.5px}}
+@media(max-width:600px){.pub-float-card{margin-top:-18px}.pub-float-card-inner{padding:13px 16px; gap:10px}.pub-float-card-text{font-size:11.5px}}
 
 /* ---------------- frase grande / marquee en movimiento ---------------- */
 .pub-marquee{overflow:hidden; border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--soft); padding:16px 0; margin-top:48px}
@@ -215,11 +215,13 @@ html{scroll-behavior:smooth}
 .hero-land-inner .home-banner-title{text-align:left; margin:0 0 14px}
 .hero-land-inner .home-banner-subtitle{text-align:left}
 .hero-land-ctas{display:flex; flex-wrap:wrap; gap:12px; opacity:0; animation:bannerFadeUp .7s ease .5s forwards}
-.hero-pillars{
-  position:relative; z-index:2; display:flex; flex-wrap:wrap; gap:22px; margin:0 6% 48px; max-width:640px;
+.hero-pillars-wrap{
+  position:relative; z-index:2; background:rgba(6,6,10,.72); backdrop-filter:blur(6px);
+  border-top:1px solid rgba(255,255,255,.08); padding:14px 6%;
   opacity:0; animation:bannerFadeUp .7s ease .6s forwards;
 }
-.hero-pillar{display:flex; align-items:center; gap:8px; color:rgba(255,255,255,.85); font:800 11px 'IBM Plex Mono',monospace; letter-spacing:.08em; text-transform:uppercase}
+.hero-pillars{display:flex; flex-wrap:wrap; gap:22px; max-width:1240px; margin:0 auto; justify-content:flex-start}
+.hero-pillar{display:flex; align-items:center; gap:8px; color:rgba(255,255,255,.9); font:800 11px 'IBM Plex Mono',monospace; letter-spacing:.08em; text-transform:uppercase}
 .hero-pillar-ico{color:var(--blue); font-size:14px}
 .hero-land-photo{
   position:absolute; right:2%; bottom:0; z-index:1; max-height:94%; max-width:46%; object-fit:contain;
@@ -237,13 +239,14 @@ html{scroll-behavior:smooth}
   .hero-land-inner{margin:0 auto; padding:52px 20px 32px; text-align:center; width:100%}
   .hero-land-inner .home-banner-title,.hero-land-inner .home-banner-subtitle{text-align:center}
   .hero-land-ctas{justify-content:center}
-  .hero-pillars{justify-content:center; margin:0 20px 28px}
+  .hero-pillars-wrap{padding:14px 20px}
+  .hero-pillars{justify-content:center}
   .hero-land-photo{position:relative; right:auto; bottom:auto; display:block; margin:0 auto; max-width:72%; max-height:260px}
   .hero-land-graphic{position:relative; width:100%; height:180px; margin:4px 0 0; order:3}
   .hero-land::before,.hero-land::after{display:none}
   @keyframes heroPhotoIn{from{opacity:0; transform:translateY(20px) scale(.96)} to{opacity:1; transform:translateY(0) scale(1)}}
 }
-@media(prefers-reduced-motion:reduce){.hero-land-ctas,.hero-land-photo,.hero-pillars,.hero-land-graphic{animation:none; opacity:1}}
+@media(prefers-reduced-motion:reduce){.hero-land-ctas,.hero-land-photo,.hero-pillars-wrap,.hero-land-graphic{animation:none; opacity:1}}
 
 /* ---------------- secciones generales de la landing ---------------- */
 .land-section{max-width:1240px; margin:0 auto; padding:56px 20px 8px}
@@ -291,6 +294,7 @@ html{scroll-behavior:smooth}
   transition:transform 160ms var(--ease-out, cubic-bezier(.23,1,.32,1)), background-color 200ms ease;
 }
 .pub-social-btn:hover{background:var(--blue); transform:translateY(-2px)}
+.pub-social-btn svg{width:17px; height:17px; fill:currentColor; flex:none}
 
 /* ---------------- promoción destacada ---------------- */
 .pub-promo{position:relative; overflow:hidden; min-height:320px; display:flex; align-items:center; background:var(--ink)}
@@ -345,7 +349,9 @@ html{scroll-behavior:smooth}
 .pub-savings-chip{display:none}
 .pub-sizes{font:700 10px 'IBM Plex Mono',monospace; color:var(--muted); letter-spacing:.04em}
 .pub-colors{display:flex; gap:5px; margin-top:2px}
-.pub-dot{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--line); display:inline-block}
+.pub-dot{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--line); display:inline-block; cursor:pointer; transition:transform 160ms ease, box-shadow 160ms ease}
+.pub-dot:hover{transform:scale(1.18)}
+.pub-dot.active{border-color:#fff; box-shadow:0 0 0 2px var(--blue)}
 .pub-card-actions{display:flex; gap:8px; margin-top:8px}
 .pub-card-actions .pub-btn{flex:1; padding:11px 10px; font-size:11px}
 

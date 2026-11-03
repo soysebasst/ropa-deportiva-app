@@ -44,6 +44,21 @@ seed_data_if_needed()
 
 app = Flask(__name__)
 
+
+def _asset_version(filename):
+    """Devuelve la fecha de modificación del archivo estático como número,
+    para usarla como ?v= en los enlaces a CSS/JS y así forzar a los
+    navegadores (y al caché de PythonAnywhere) a bajar la versión nueva
+    cada vez que se publica un cambio, en vez de quedarse con la vieja."""
+    try:
+        path = Path(app.static_folder) / filename
+        return int(path.stat().st_mtime)
+    except OSError:
+        return 1
+
+
+app.jinja_env.globals["asset_version"] = _asset_version
+
 _default_secret = "cambia-esta-clave"
 app.secret_key = os.environ.get("SECRET_KEY", _default_secret)
 if app.secret_key == _default_secret:
@@ -64,7 +79,7 @@ if ADMIN_PASSWORD == _default_admin_pass:
 # Rutas que cualquiera puede ver sin iniciar sesión: el catálogo público,
 # su API de solo lectura, las imágenes subidas, los archivos estáticos y la
 # propia pantalla de login. Todo lo demás exige haber iniciado sesión.
-PUBLIC_PATH_PREFIXES = ("/catalogo", "/api/catalogo", "/mayoristas", "/uploads/", "/static/", "/login")
+PUBLIC_PATH_PREFIXES = ("/inicio", "/catalogo", "/api/catalogo", "/mayoristas", "/uploads/", "/static/", "/login")
 
 
 @app.before_request
@@ -112,14 +127,25 @@ DEFAULT_SETTINGS = {
     "short_description": "Catálogo oficial de sportswear_ST: ropa deportiva moderna para tu día a día.",
     "instagram_url": "",
     "whatsapp_number": "",
-    # Banner grande de la portada del catálogo público
+    "facebook_url": "https://www.facebook.com/Sportswearst1",
+    # Banner grande / hero de la landing (/inicio)
     "banner_image": "",
     "banner_title": "NUEVA COLECCIÓN",
     "banner_subtitle": "Ropa deportiva para tu estilo.",
     "banner_cta_text": "Ver catálogo",
+    "hero_photo": "",  # foto del modelo, idealmente sin fondo (PNG transparente)
     # Barra de anuncio (encima del header) y frase grande tipo "statement"
     "announcement_text": "Escríbenos por WhatsApp y te ayudamos a elegir tu talla.",
     "statement_text": "",
+    # Garantías / envíos / ubicación (sección de confianza en la landing)
+    "location_text": "Ubicados en Cúcuta, Norte de Santander. Enviamos a toda Colombia y Venezuela.",
+    "shipping_text": "Colombia: Interrapidísimo. Venezuela: Tealca, MRW y Zoom.",
+    "warranty_text": "Cambios por defectos de fabricación o por talla equivocada, hasta 3 días después de recibida la prenda. No se hacen devoluciones de dinero, solo cambios o conversión a otra prenda.",
+    # Promoción destacada (franja oscura en la landing)
+    "promo_title": "Promoción activa",
+    "promo_text": "Escríbenos por WhatsApp para conocer las promociones y combos del mes.",
+    "promo_cta_text": "Ver promoción",
+    "promo_image": "",
     # Catálogo mayorista (/mayoristas)
     "wholesale_min_qty": "6",
     "wholesale_note": "",
@@ -1114,9 +1140,11 @@ def settings_page():
                 conn.execute("INSERT INTO settings(key,value) VALUES('accent_color',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (accent_color,))
 
             for key in (
-                "tagline", "short_description", "instagram_url", "whatsapp_number",
+                "tagline", "short_description", "instagram_url", "whatsapp_number", "facebook_url",
                 "banner_title", "banner_subtitle", "banner_cta_text",
                 "announcement_text", "statement_text",
+                "location_text", "shipping_text", "warranty_text",
+                "promo_title", "promo_text", "promo_cta_text",
                 "wholesale_min_qty", "wholesale_note",
             ):
                 val = request.form.get(key, "").strip()
@@ -1140,6 +1168,22 @@ def settings_page():
                     conn.execute("INSERT INTO settings(key,value) VALUES('banner_image',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (banner_name,))
                 else:
                     flash("La imagen del banner debe ser PNG, JPG, WEBP o GIF.", "error")
+
+            hero_photo_file = request.files.get("hero_photo")
+            if hero_photo_file and hero_photo_file.filename:
+                hero_photo_name = save_image(hero_photo_file)
+                if hero_photo_name:
+                    conn.execute("INSERT INTO settings(key,value) VALUES('hero_photo',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (hero_photo_name,))
+                else:
+                    flash("La foto del modelo debe ser PNG, JPG, WEBP o GIF.", "error")
+
+            promo_image_file = request.files.get("promo_image")
+            if promo_image_file and promo_image_file.filename:
+                promo_image_name = save_image(promo_image_file)
+                if promo_image_name:
+                    conn.execute("INSERT INTO settings(key,value) VALUES('promo_image',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (promo_image_name,))
+                else:
+                    flash("La imagen de la promoción debe ser PNG, JPG, WEBP o GIF.", "error")
 
             conn.commit()
             flash("Configuración guardada.", "ok")
@@ -1230,6 +1274,52 @@ def public_catalog_items(conn):
             "url": url_for("catalog_product", reference=s["reference"]),
         })
     return items
+
+
+def landing_categories(conn, items, limit=6):
+    """Una tarjeta por categoría (estilo Novashion): cuántos productos tiene
+    y una foto representativa (la del primer producto publicado que encuentre),
+    para la sección "Explora por categoría" de la landing."""
+    cats = get_categories(conn)
+    out = []
+    for c in cats:
+        in_cat = [it for it in items if it["category"] == c["name"]]
+        if not in_cat:
+            continue
+        image = next((it["image"] for it in in_cat if it.get("image")), None)
+        out.append({
+            "name": c["name"],
+            "count": len(in_cat),
+            "image": image,
+            "url": url_for("public_catalog") + "#pubGrid",
+        })
+    return out[:limit]
+
+
+@app.route("/inicio")
+def landing_page():
+    conn = db()
+    try:
+        items = public_catalog_items(conn)
+        categories = landing_categories(conn, items)
+        trending = sorted(items, key=lambda it: it.get("updated") or "", reverse=True)[:8]
+        brand = get_settings(conn)
+    finally:
+        conn.close()
+    promo_image_name = brand.get("promo_image") or ""
+    if promo_image_name:
+        promo_image = image_url(promo_image_name)
+    else:
+        # Si todavía no han subido una foto propia para la promoción, usamos
+        # de una vez la de un producto real del catálogo (se puede cambiar
+        # después desde Configuración sin tocar código).
+        promo_image = next((it["image"] for it in trending if it.get("image")), None)
+    return render_template(
+        "landing.html",
+        categories=categories,
+        trending=trending,
+        promo_image=promo_image,
+    )
 
 
 @app.route("/catalogo")

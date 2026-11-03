@@ -262,7 +262,7 @@
 
   // ---- 1. Revelado escalonado de tarjetas al hacer scroll -----------------
   function setupReveal() {
-    var cards = Array.prototype.slice.call(document.querySelectorAll(".pub-grid .pub-card"));
+    var cards = Array.prototype.slice.call(document.querySelectorAll(".pub-grid .pub-card, .cat-grid .cat-tile"));
     if (!cards.length) return;
     var root = document.documentElement;
     if (!canAnimate || !("IntersectionObserver" in window)) {

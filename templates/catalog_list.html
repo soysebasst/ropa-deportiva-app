@@ -3,23 +3,9 @@
 {% block og_title %}{{ brand.brand_name }} — Catálogo{% endblock %}
 
 {% block subheader %}
-{% if brand.banner_image %}
-<div class="home-banner">
-  <div class="home-banner-bg" style="background-image:url('{{ url_for('uploaded_file', filename=brand.banner_image) }}')"></div>
-  <div class="home-banner-inner">
-    <span class="home-banner-eyebrow">NUEVA TEMPORADA</span>
-    {% if brand.banner_title %}<h1 class="home-banner-title">{{ brand.banner_title }}</h1>{% endif %}
-    {% if brand.banner_subtitle %}<p class="home-banner-subtitle">{{ brand.banner_subtitle }}</p>{% endif %}
-    <a class="pub-btn pub-btn-solid pub-btn-lg home-banner-cta" href="#pubGrid">{{ brand.banner_cta_text or 'Ver catálogo' }}</a>
-  </div>
+<div class="pub-breadcrumb">
+  <a href="{{ url_for('landing_page') }}">← Inicio</a>
 </div>
-<div class="pub-float-card reveal-up">
-  <div class="pub-float-card-inner">
-    <span class="pub-float-card-icon">{{ (brand.brand_name or 'S')[:1]|upper }}</span>
-    <span class="pub-float-card-text">{{ brand.tagline or 'Ropa deportiva para tu estilo.' }}<br><strong>Escríbenos y arma tu pedido hoy mismo.</strong></span>
-  </div>
-</div>
-{% endif %}
 <div class="cat-nav-wrap">
   <div class="cat-nav" id="catNav">
     <button class="cat-chip active" data-cat="">TODOS</button>
@@ -28,18 +14,11 @@
     {% endfor %}
   </div>
 </div>
-{% if brand.statement_text %}
-<div class="pub-marquee">
-  <div class="pub-marquee-track">
-    {% for i in range(6) %}<span class="pub-marquee-item">{{ brand.statement_text }}</span>{% endfor %}
-  </div>
-</div>
-{% endif %}
 {% endblock %}
 
 {% block content %}
 <div class="pub-section-head reveal-up">
-  <div><span class="pub-section-eyebrow">Explora</span><h2>Catálogo</h2></div>
+  <div><span class="pub-section-eyebrow">Explora</span><h2>Catálogo completo</h2></div>
 </div>
 <div class="pub-grid" id="pubGrid">
 {% for it in items %}

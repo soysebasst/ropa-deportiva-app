@@ -48,6 +48,38 @@
       <label>WhatsApp<input name="whatsapp_number" placeholder="573001234567" value="{{ brand.whatsapp_number }}"></label>
       <label>Instagram (URL)<input name="instagram_url" placeholder="https://instagram.com/sportswear_st" value="{{ brand.instagram_url }}"></label>
     </div>
+    <label>Facebook (URL)<input name="facebook_url" placeholder="https://www.facebook.com/sportswearst1" value="{{ brand.facebook_url }}"></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Foto del modelo (landing)</h3>
+    <p class="muted">Se muestra flotando sobre el banner de inicio. Idealmente un PNG con fondo transparente (modelo recortado).</p>
+    {% if brand.hero_photo %}
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.hero_photo) }}" style="max-height:160px;object-fit:contain;background:#111217;padding:10px;border-radius:12px"><span>Foto actual — sube una nueva para reemplazarla.</span></div>
+    {% endif %}
+    <label class="filebox"><input name="hero_photo" type="file" accept="image/*"><span>{{ 'Reemplazar foto' if brand.hero_photo else 'Subir foto del modelo' }}</span><small>PNG transparente recomendado, JPG/WEBP también funcionan</small></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Garantías, envíos y ubicación</h3>
+    <p class="muted">Aparece en la sección "Garantías y envíos" de la landing.</p>
+    <label>Envíos<textarea name="shipping_text" rows="2">{{ brand.shipping_text }}</textarea></label>
+    <label>Cambios y garantía<textarea name="warranty_text" rows="3">{{ brand.warranty_text }}</textarea></label>
+    <label>Ubicación<input name="location_text" value="{{ brand.location_text }}"></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Promoción destacada</h3>
+    <p class="muted">Franja oscura al final de la landing. Si no subes una foto propia, se usa automáticamente la de un producto publicado.</p>
+    {% if brand.promo_image %}
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.promo_image) }}" style="max-height:120px;object-fit:cover"><span>Imagen actual de la promoción.</span></div>
+    {% endif %}
+    <label class="filebox"><input name="promo_image" type="file" accept="image/*"><span>{{ 'Reemplazar imagen' if brand.promo_image else 'Subir imagen de la promoción' }}</span></label>
+    <div class="row" style="margin-top:10px">
+      <label>Título<input name="promo_title" value="{{ brand.promo_title }}"></label>
+      <label>Texto del botón<input name="promo_cta_text" value="{{ brand.promo_cta_text }}"></label>
+    </div>
+    <label>Texto<textarea name="promo_text" rows="2">{{ brand.promo_text }}</textarea></label>
   </div>
 
   <div class="form-section">
@@ -60,8 +92,8 @@
   </div>
 
   <div class="form-section" style="border-bottom:0">
-    <h3>Banner grande de la portada</h3>
-    <p class="muted">Se muestra al tope de tu catálogo público, antes de las prendas — como en las tiendas grandes.</p>
+    <h3>Banner grande (landing)</h3>
+    <p class="muted">Se muestra al tope de tu página de inicio (/inicio), detrás del título grande.</p>
     {% if brand.banner_image %}
     <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.banner_image) }}" style="max-height:120px;object-fit:cover"><span>Imagen actual del banner — sube una nueva para reemplazarla.</span></div>
     {% endif %}
@@ -79,8 +111,14 @@
 </form>
 
 <div class="card-form" style="max-width:640px;margin-top:20px">
+  <h3 style="margin-top:0">Enlace de tu página de inicio</h3>
+  <p class="muted">Este es el enlace principal que debes compartir con tus clientes por WhatsApp o Instagram: la landing con banner, categorías, tendencia y promoción.</p>
+  <a class="primary" href="{{ url_for('landing_page') }}" target="_blank" rel="noopener">{{ request.url_root }}inicio ↗</a>
+</div>
+
+<div class="card-form" style="max-width:640px;margin-top:20px">
   <h3 style="margin-top:0">Enlace de tu catálogo público</h3>
-  <p class="muted">Este es el enlace que puedes compartir con tus clientes por WhatsApp o Instagram.</p>
+  <p class="muted">El listado completo de productos, sin la landing — al que llevan los botones "Ver catálogo".</p>
   <a class="primary" href="{{ url_for('public_catalog') }}" target="_blank" rel="noopener">{{ request.url_root }}catalogo ↗</a>
 </div>
 

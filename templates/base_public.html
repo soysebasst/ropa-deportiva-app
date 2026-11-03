@@ -24,8 +24,8 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='catalog.css') }}">
-<style>:root{--lav:{{ brand.primary_color or '#97a2ff' }};--blue:{{ brand.accent_color or '#2d42ff' }};}</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='catalog.css') }}?v={{ asset_version('catalog.css') }}">
+<style>:root{--lav:{{ brand.primary_color or '#6c8cff' }};--blue:{{ brand.accent_color or '#2541ff' }};}</style>
 <script>
 /* Activa la animación de entrada antes de pintar (evita parpadeo). Si el JS del
    catálogo no carga en 2.5 s, se desactiva para que nunca quede contenido oculto. */
@@ -43,7 +43,7 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
 
 <header class="pub-header">
   <div class="pub-header-inner">
-    <a class="pub-brand" href="{{ url_for('public_catalog') }}">
+    <a class="pub-brand" href="{{ url_for('landing_page') }}">
       {% if brand.logo %}<img class="pub-logo" src="{{ url_for('uploaded_file', filename=brand.logo) }}" alt="{{ brand.brand_name }}">
       {% else %}<span class="pub-logo pub-logo-fallback">{{ (brand.brand_name or 'S')[:1]|upper }}</span>{% endif %}
       <span class="pub-brand-text">
@@ -53,6 +53,7 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
     </a>
     <div class="pub-header-actions">
       {% block header_actions %}
+      <a class="pub-back-link pub-nav-link" href="{{ url_for('public_catalog') }}">Catálogo</a>
       <a class="pub-wholesale-btn" href="{{ url_for('mayoristas_catalog') }}">Mayoristas</a>
       <a class="cart-fab" href="{{ url_for('catalog_pedido') }}" id="cartFab">
         <span class="cart-fab-icon">🛍</span>
@@ -72,10 +73,27 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
 
 <footer class="pub-footer">
   <div class="pub-footer-inner">
-    <div class="pub-footer-brand">{{ brand.brand_name }}</div>
-    <div class="pub-footer-links">
-      {% if brand.instagram_url %}<a href="{{ brand.instagram_url }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
-      {% if brand.whatsapp_number %}<a href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
+    <div class="pub-footer-top">
+      <div class="pub-footer-brand-block">
+        <div class="pub-footer-brand">{{ brand.brand_name }}</div>
+        {% if brand.tagline %}<p class="pub-footer-tagline">{{ brand.tagline }}</p>{% endif %}
+        {% if brand.location_text %}<p class="pub-footer-tagline">{{ brand.location_text }}</p>{% endif %}
+        <div class="pub-social-row">
+          {% if brand.instagram_url %}<a class="pub-social-btn" href="{{ brand.instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram">IG</a>{% endif %}
+          {% if brand.facebook_url %}<a class="pub-social-btn" href="{{ brand.facebook_url }}" target="_blank" rel="noopener" aria-label="Facebook">FB</a>{% endif %}
+          {% if brand.whatsapp_number %}<a class="pub-social-btn" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener" aria-label="WhatsApp">WA</a>{% endif %}
+        </div>
+      </div>
+      <nav class="pub-footer-nav">
+        <span class="pub-footer-nav-title">Explora</span>
+        <a href="{{ url_for('landing_page') }}">Inicio</a>
+        <a href="{{ url_for('landing_page') }}#categorias">Categorías</a>
+        <a href="{{ url_for('landing_page') }}#tendencia">Tendencia</a>
+        <a href="{{ url_for('landing_page') }}#promocion">Promoción</a>
+        <a href="{{ url_for('landing_page') }}#garantias">Garantías y envíos</a>
+        <a href="{{ url_for('public_catalog') }}">Catálogo completo</a>
+        <a href="{{ url_for('mayoristas_catalog') }}">Mayoristas</a>
+      </nav>
     </div>
     <p class="pub-footer-note">Este catálogo es informativo. Los pedidos se confirman directamente por WhatsApp — no se realizan pagos ni compras dentro de esta página.</p>
   </div>
@@ -88,7 +106,7 @@ window.BRAND = {
   whatsapp: {{ (brand.whatsapp_number|wanumber)|tojson }},
 };
 </script>
-<script src="{{ url_for('static', filename='catalog.js') }}"></script>
+<script src="{{ url_for('static', filename='catalog.js') }}?v={{ asset_version('catalog.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

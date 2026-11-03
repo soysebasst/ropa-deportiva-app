@@ -1,0 +1,156 @@
+{% extends "base_public.html" %}
+{% block meta_title %}{{ brand.brand_name }} — {{ brand.tagline }}{% endblock %}
+{% block og_title %}{{ brand.brand_name }} — {{ brand.tagline }}{% endblock %}
+
+{% block header_actions %}
+<a class="pub-wholesale-btn" href="{{ url_for('mayoristas_catalog') }}">Mayoristas</a>
+<a class="cart-fab" href="{{ url_for('catalog_pedido') }}" id="cartFab">
+  <span class="cart-fab-icon">🛍</span>
+  <span class="cart-fab-label">MI PEDIDO</span>
+  <span class="cart-fab-count" id="cartFabCount">0</span>
+</a>
+{% endblock %}
+
+{% block subheader %}
+<div class="hero-land">
+  {% if brand.banner_image %}<div class="home-banner-bg" style="background-image:url('{{ url_for('uploaded_file', filename=brand.banner_image) }}')"></div>{% endif %}
+  <div class="hero-land-inner">
+    <span class="home-banner-eyebrow">{{ brand.brand_name|upper }}</span>
+    <h1 class="home-banner-title">{{ brand.banner_title or 'ELEVA TU ESTILO' }}</h1>
+    {% if brand.banner_subtitle %}<p class="home-banner-subtitle">{{ brand.banner_subtitle }}</p>{% endif %}
+    <div class="hero-land-ctas">
+      <a class="pub-btn pub-btn-solid pub-btn-lg" href="{{ url_for('public_catalog') }}">{{ brand.banner_cta_text or 'Ver catálogo' }}</a>
+      <a class="pub-btn pub-btn-outline-light pub-btn-lg" href="#categorias">Explorar categorías</a>
+    </div>
+  </div>
+  {% if brand.hero_photo %}
+  <img class="hero-land-photo" src="{{ url_for('uploaded_file', filename=brand.hero_photo) }}" alt="{{ brand.brand_name }}">
+  {% endif %}
+</div>
+<div class="pub-float-card reveal-up">
+  <div class="pub-float-card-inner">
+    <span class="pub-float-card-icon">{{ (brand.brand_name or 'S')[:1]|upper }}</span>
+    <span class="pub-float-card-text">{{ brand.tagline or 'Ropa deportiva para tu estilo.' }}<br><strong>Escríbenos y arma tu pedido hoy mismo.</strong></span>
+  </div>
+  {% if brand.whatsapp_number %}<a class="pub-btn pub-btn-wa" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
+</div>
+{% if brand.statement_text %}
+<div class="pub-marquee">
+  <div class="pub-marquee-track">
+    {% for i in range(6) %}<span class="pub-marquee-item">{{ brand.statement_text }}</span>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<section id="categorias" class="land-section">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Encuentra lo tuyo</span><h2>Explora por categoría</h2></div>
+    <a class="pub-view-all" href="{{ url_for('public_catalog') }}">Ver todo →</a>
+  </div>
+  <div class="cat-grid" id="catGrid">
+    {% for c in categories %}
+    <a class="cat-tile" href="{{ c.url }}">
+      {% if c.image %}<img src="{{ c.image }}" alt="{{ c.name }}" loading="lazy">{% else %}<div class="pub-placeholder big">{{ c.name|upper }}</div>{% endif %}
+      <div class="cat-tile-overlay"></div>
+      <div class="cat-tile-body">
+        <span class="cat-tile-count">{{ c.count }} ítem{{ 's' if c.count != 1 else '' }}</span>
+        <span class="cat-tile-name">{{ c.name|upper }}</span>
+      </div>
+      <span class="cat-tile-arrow">↗</span>
+    </a>
+    {% else %}
+    <div class="pub-empty">Todavía no hay categorías con productos publicados.</div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="garantias" class="land-section">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Compra con confianza</span><h2>Garantías y envíos</h2></div>
+  </div>
+  <div class="guarantee-grid">
+    <div class="guarantee-card reveal-up">
+      <span class="guarantee-icon">🚚</span>
+      <h3>Envíos</h3>
+      <p>{{ brand.shipping_text }}</p>
+    </div>
+    <div class="guarantee-card reveal-up">
+      <span class="guarantee-icon">🔄</span>
+      <h3>Cambios y garantía</h3>
+      <p>{{ brand.warranty_text }}</p>
+    </div>
+    <div class="guarantee-card reveal-up">
+      <span class="guarantee-icon">📍</span>
+      <h3>Ubicación</h3>
+      <p>{{ brand.location_text }}</p>
+    </div>
+    <div class="guarantee-card reveal-up">
+      <span class="guarantee-icon">💬</span>
+      <h3>Síguenos</h3>
+      <p>Resolvemos tus dudas y confirmamos pedidos por estos canales.</p>
+      <div class="pub-social-row">
+        {% if brand.instagram_url %}<a class="pub-social-btn" href="{{ brand.instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram">IG</a>{% endif %}
+        {% if brand.facebook_url %}<a class="pub-social-btn" href="{{ brand.facebook_url }}" target="_blank" rel="noopener" aria-label="Facebook">FB</a>{% endif %}
+        {% if brand.whatsapp_number %}<a class="pub-social-btn" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener" aria-label="WhatsApp">WA</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if trending %}
+<section id="tendencia" class="land-section">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Lo nuevo</span><h2>En tendencia</h2></div>
+    <a class="pub-view-all" href="{{ url_for('public_catalog') }}">Ver todo →</a>
+  </div>
+  <div class="pub-grid" id="trendGrid">
+    {% for it in trending %}
+    <article class="pub-card" data-category="{{ it.category }}">
+      <a href="{{ it.url }}" class="pub-card-imgwrap">
+        {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
+        <span class="pub-cat-chip">{{ it.category }}</span>
+        {% if it.type == 'conjunto' and it.savings and it.savings > 0 %}
+        <span class="pub-ribbon">Ahorras {{ it.savings|money }}</span>
+        {% endif %}
+      </a>
+      <div class="pub-card-body">
+        <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+        <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
+        <div class="pub-card-price">{{ it.price|money }}</div>
+        {% if it.colors %}
+        <div class="pub-colors">
+          {% for c in it.colors %}<span class="pub-dot" style="background:{{ c.name|colorhex }}" title="{{ c.name }}"></span>{% endfor %}
+        </div>
+        {% endif %}
+        <div class="pub-card-actions">
+          <a class="pub-btn pub-btn-outline" href="{{ it.url }}">Ver producto</a>
+          <a class="pub-btn pub-btn-solid" href="{{ it.url }}#elegir">Agregar</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section id="promocion" class="land-section land-section-flush">
+  <div class="pub-promo reveal-up">
+    {% if promo_image %}<img class="pub-promo-bg" src="{{ promo_image }}" alt="">{% endif %}
+    <div class="pub-promo-overlay"></div>
+    <div class="pub-promo-body">
+      <span class="pub-section-eyebrow light">Promoción</span>
+      <h2 class="pub-promo-title">{{ brand.promo_title or 'Promoción activa' }}</h2>
+      <p class="pub-promo-text">{{ brand.promo_text }}</p>
+      {% if brand.whatsapp_number %}
+      <a class="pub-btn pub-btn-solid pub-btn-lg" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}?text={{ ('Hola ' ~ brand.brand_name ~ ', quiero saber mas de la promocion.')|urlencode }}" target="_blank" rel="noopener">{{ brand.promo_cta_text or 'Ver promoción' }}</a>
+      {% else %}
+      <a class="pub-btn pub-btn-solid pub-btn-lg" href="{{ url_for('public_catalog') }}">{{ brand.promo_cta_text or 'Ver promoción' }}</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

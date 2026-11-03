@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block pagetitle %}Categorías{% endblock %}
+{% block eyebrow %}ORGANIZACIÓN{% endblock %}
+{% block heading %}Categorías{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div><div class="section-kicker">ORGANIZACIÓN</div><h2>Categorías de productos</h2><p>Agrega nuevas categorías cuando lo necesites, sin tocar código.</p></div>
+</div>
+
+<div class="card-form" style="max-width:520px;margin-bottom:28px">
+  <h3 style="margin-top:0">Agregar categoría</h3>
+  <form method="post" action="{{ url_for('category_new') }}" class="row" style="grid-template-columns:1fr auto;align-items:end">
+    <label>Nombre<input name="name" placeholder="Ej. Chaquetas" required></label>
+    <button class="primary" type="submit">+ Agregar</button>
+  </form>
+</div>
+
+<div class="category-table">
+  <div class="category-row category-row-head"><span>Categoría</span><span>Productos</span><span></span></div>
+  {% for c in categories %}
+  <div class="category-row">
+    <span class="cat-name">{{ c.name }}</span>
+    <span>{{ c.product_count }} producto(s)</span>
+    <span>
+      {% if c.name == 'Conjuntos' %}
+        <span class="muted">Reservada</span>
+      {% elif c.product_count > 0 %}
+        <span class="muted">En uso</span>
+      {% else %}
+      <form method="post" action="{{ url_for('category_delete', cid=c.id) }}" onsubmit="return confirm('¿Eliminar la categoría {{ c.name }}?')">
+        <button class="danger-link small" type="submit">Eliminar</button>
+      </form>
+      {% endif %}
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

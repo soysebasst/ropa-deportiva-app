@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block pagetitle %}Guía de envío{% endblock %}
+{% block eyebrow %}ENVÍOS{% endblock %}
+{% block heading %}Guía de envío (PDF){% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div>
+    <div class="section-kicker">MEDIA CARTA · REMITENTE FIJO</div>
+    <h2>Genera tu guía de envío</h2>
+    <p>Completa los datos del destinatario y descarga un PDF listo para imprimir (tamaño media hoja carta, 8.5 × 5.5 in), con el remitente ya diligenciado y el nuevo estilo de marca.</p>
+  </div>
+</div>
+
+<div class="card-form" style="max-width:520px;margin-bottom:22px">
+  <h3 style="margin-top:0">Remitente (fijo)</h3>
+  <p class="muted" style="margin:0 0 4px">{{ remitente.nombre }} — CC: {{ remitente.cc }}</p>
+  <p class="muted" style="margin:0 0 4px">Correo: {{ remitente.correo }} · Celular: {{ remitente.celular }}</p>
+  <p class="muted" style="margin:0">{{ remitente.direccion }}</p>
+</div>
+
+<form class="form card-form" method="post" style="max-width:520px">
+  <div class="form-section" style="border-bottom:0">
+    <h3>Datos del destinatario</h3>
+    <label>Nombre<input name="nombre" placeholder="Nombre completo" required></label>
+    <label>Cédula<input name="cc" placeholder="CC"></label>
+    <label>Dirección<input name="direccion" placeholder="Dirección completa"></label>
+    <div class="row">
+      <label>Ciudad<input name="ciudad" placeholder="Ciudad"></label>
+      <label>Celular<input name="celular" placeholder="Número de contacto"></label>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="primary" type="submit">Descargar guía en PDF</button>
+  </div>
+</form>
+{% endblock %}

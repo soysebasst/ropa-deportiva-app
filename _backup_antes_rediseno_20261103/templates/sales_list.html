@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block pagetitle %}Ventas{% endblock %}
+{% block eyebrow %}REGISTRO PRIVADO{% endblock %}
+{% block heading %}Ventas{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div><div class="section-kicker">REGISTRO PRIVADO — SOLO ADMINISTRADOR</div><h2>Mis ventas</h2><p>Lleva el control de lo que vendes, el envío y los datos del cliente. Esto nunca se muestra en el catálogo público.</p></div>
+  <div class="hero-actions">
+    <a class="secondary" href="{{ url_for('export_sales_csv') }}">⬇ Exportar CSV</a>
+    <a class="primary" href="{{ url_for('sale_new') }}">+ Registrar venta</a>
+  </div>
+</div>
+
+<div class="stats stats-4">
+  <div class="stat"><span>VENTAS REGISTRADAS</span><strong>{{ total_sales }}</strong></div>
+  <div class="stat"><span>TOTAL VENDIDO</span><strong>{{ total_revenue|money }}</strong></div>
+  <div class="stat"><span>TOTAL COSTO</span><strong>{{ total_cost|money }}</strong></div>
+  <div class="stat stat-highlight"><span>GANANCIA NETA</span><strong>{{ total_profit|money }}</strong></div>
+</div>
+
+<div class="toolbar">
+  <div class="searchbox"><span>⌕</span><input id="search" placeholder="Buscar por cliente, producto, teléfono o ciudad..." oninput="filterSales()"></div>
+</div>
+
+<div class="section-title"><h3>Historial de ventas</h3><span id="visibleCount">{{ sales|length }} ventas</span></div>
+
+<div class="table-wrap">
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cant.</th><th>Costo</th><th>Venta</th><th>Envío</th><th>Ganancia</th><th></th>
+    </tr>
+  </thead>
+  <tbody id="salesBody">
+  {% for s in sales %}
+    <tr class="sale-row" data-search="{{ (s.customer_name ~ ' ' ~ s.customer_phone ~ ' ' ~ s.customer_location ~ ' ' ~ s.product_name ~ ' ' ~ (s.product_ref or ''))|lower }}">
+      <td>{{ s.sale_date }}</td>
+      <td>
+        <div class="cell-strong">{{ s.customer_name or '—' }}</div>
+        {% if s.customer_phone %}<div class="cell-muted">{{ s.customer_phone }}</div>{% endif %}
+        {% if s.customer_location %}<div class="cell-muted">{{ s.customer_location }}</div>{% endif %}
+      </td>
+      <td>
+        <div class="cell-strong">{{ s.product_name }}</div>
+        {% if s.product_ref %}<div class="cell-muted">{{ s.product_ref }}</div>{% endif %}
+      </td>
+      <td>{{ s.quantity }}</td>
+      <td>{{ s.cost|money }}</td>
+      <td>{{ s.sale_price|money }}</td>
+      <td>
+        {% if s.shipping_payer == 'ninguno' %}<span class="cell-muted">—</span>
+        {% else %}{{ s.shipping_cost|money }}<div class="cell-muted">{{ s.payer_label }}</div>{% endif %}
+      </td>
+      <td class="cell-profit {{ 'neg' if s.profit < 0 else '' }}">{{ s.profit|money }}</td>
+      <td class="cell-actions">
+        <a class="link" href="{{ url_for('sale_edit', said=s.id) }}">Editar</a>
+        <form method="post" action="{{ url_for('sale_delete', said=s.id) }}" onsubmit="return confirm('¿Eliminar esta venta? Esta acción no se puede deshacer.')" class="delete-form">
+          <button class="danger-link small" type="submit">Eliminar</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="9"><div class="empty">Todavía no has registrado ninguna venta.</div></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterSales(){
+  const q = document.getElementById('search').value.toLowerCase();
+  let visible = 0;
+  document.querySelectorAll('.sale-row').forEach(r=>{
+    const s = r.dataset.search || '';
+    const show = !q || s.includes(q);
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  const el = document.getElementById('visibleCount'); if (el) el.textContent = visible + ' ventas';
+}
+</script>
+{% endblock %}

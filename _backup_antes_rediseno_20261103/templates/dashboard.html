@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block pagetitle %}Inventario{% endblock %}
+{% block eyebrow %}ADMINISTRACIÓN{% endblock %}
+{% block heading %}Inventario{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div><div class="section-kicker">RESUMEN</div><h2>Hola, {{ brand.brand_name }}</h2><p>Este es el estado actual de tu catálogo.</p></div>
+  <div class="hero-actions">
+    <a class="secondary" href="{{ url_for('products_list') }}">Ver productos</a>
+    <a class="primary" href="{{ url_for('product_new') }}">+ Nuevo producto</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span>REFERENCIAS</span><strong>{{ total_products }}</strong></div>
+  <div class="stat"><span>CONJUNTOS</span><strong>{{ total_sets }}</strong></div>
+  <div class="stat"><span>CATEGORÍAS</span><strong>{{ total_categories }}</strong></div>
+</div>
+
+<div class="section-title"><h3>Productos recientes</h3><a class="link" href="{{ url_for('products_list') }}">Ver todos →</a></div>
+<div class="grid">
+{% for p in recent_products %}
+  <article class="card">
+    <div class="image-wrap">
+      {% if p.image %}<img src="{{ url_for('uploaded_file', filename=p.image) }}" class="cover">{% else %}<div class="placeholder">SIN IMAGEN</div>{% endif %}
+      <span class="category-chip">{{ p.category }}</span>
+    </div>
+    <div class="cardbody">
+      <div class="ref">{{ p.reference }}</div><h3>{{ p.name }}</h3>
+      <div class="sizes"><span>TALLAS</span><strong>{{ p.sizes or '—' }}</strong></div>
+      <div class="prices"><div><small>COSTO</small><b>{{ p.cost|money }}</b></div><div class="sale"><small>VENTA</small><b>{{ p.sale_price|money }}</b></div></div>
+      <div class="card-actions">
+        <a class="primary small" href="{{ url_for('product_edit', pid=p.id) }}">Editar</a>
+        <a class="secondary small" href="{{ url_for('product_detail', pid=p.id) }}">Ver ficha</a>
+      </div>
+    </div>
+  </article>
+{% else %}<div class="empty">Todavía no tienes productos registrados.</div>{% endfor %}
+</div>
+
+<div class="section-title section-gap"><h3>Conjuntos recientes</h3><a class="link" href="{{ url_for('sets_list') }}">Ver todos →</a></div>
+<div class="grid">
+{% for s in recent_sets %}
+  <article class="card">
+    <div class="image-wrap">
+      {% if s.image %}<img src="{{ url_for('uploaded_file', filename=s.image) }}" class="cover">{% else %}<div class="placeholder">SIN IMAGEN</div>{% endif %}
+      <span class="category-chip">CONJUNTO</span>
+    </div>
+    <div class="cardbody">
+      <div class="ref">{{ s.reference }}</div><h3>{{ s.name }}</h3>
+      <div class="prices"><div><small>COSTO CALC.</small><b>{{ s.cost|money }}</b></div><div class="sale"><small>VENTA</small><b>{{ s.sale_price|money }}</b></div></div>
+      <div class="card-actions">
+        <a class="primary small" href="{{ url_for('set_edit', sid=s.id) }}">Editar</a>
+        <a class="secondary small" href="{{ url_for('set_detail', sid=s.id) }}">Ver ficha</a>
+      </div>
+    </div>
+  </article>
+{% else %}<div class="empty">Todavía no tienes conjuntos registrados.</div>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base_public.html" %}
+{% block meta_title %}{% if item %}{{ item.ref }} — {{ item.name }} | Mayorista {{ brand.brand_name }}{% else %}Producto no encontrado | {{ brand.brand_name }}{% endif %}{% endblock %}
+
+{% block header_actions %}
+<a class="pub-back-link" href="{{ url_for('mayoristas_catalog') }}">← Lista mayorista</a>
+{% endblock %}
+
+{% block subheader %}
+<div class="wholesale-strip">LISTA MAYORISTA · Pedido mínimo <strong>{{ min_qty }}</strong> unidades</div>
+<div class="pub-breadcrumb">
+  <a href="{{ url_for('mayoristas_catalog') }}">← Volver a la lista mayorista</a>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if not item %}
+<div class="pub-empty pub-empty-page">
+  <h2>Producto no encontrado</h2>
+  <p>Puede que todavía no tenga precio mayorista o ya no esté disponible.</p>
+  <a class="pub-btn pub-btn-solid" href="{{ url_for('mayoristas_catalog') }}">Ver lista mayorista</a>
+</div>
+{% else %}
+<div class="pdp">
+  <div class="pdp-gallery">
+    <div class="pdp-main-image">
+      {% if item.image %}<img src="{{ item.image }}" alt="{{ item.name }}">
+      {% else %}<div class="pub-placeholder big">SIN IMAGEN</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="pdp-info">
+    <div class="pub-eyebrow">{{ item.category }}</div>
+    <div class="pdp-ref">{{ item.ref }}</div>
+    <h1 class="pdp-title">{{ item.name }}</h1>
+    <div class="pdp-price">{{ item.price|money }}</div>
+
+    {% if item.sizes %}
+    <div class="pdp-block">
+      <span class="pdp-label">Tallas disponibles</span>
+      <div class="pdp-sizes">{% for s in item.sizes %}<span class="size-pill">{{ s }}</span>{% endfor %}</div>
+    </div>
+    {% endif %}
+
+    {% if item.colors %}
+    <div class="pdp-block">
+      <span class="pdp-label">Colores</span>
+      <div class="pdp-colors">
+        {% for c in item.colors %}
+        {% if c.image %}
+        <span class="color-swatch"><img src="{{ c.image }}"><span class="color-swatch-name">{{ c.name }}</span></span>
+        {% else %}
+        <span class="color-swatch color-swatch-text"><span class="color-swatch-mini" style="background:{{ c.name|colorhex }}"></span>{{ c.name }}</span>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="pdp-actions">
+      <button class="pub-btn pub-btn-wa pub-btn-lg" id="waConsultBtn">Consultar por WhatsApp</button>
+    </div>
+
+    {% if item.includes %}
+    <div class="pdp-block">
+      <span class="pdp-label">Incluye</span>
+      <div class="pdp-includes">
+        {% for inc in item.includes %}
+        <div class="pdp-include-row">
+          <span class="ref">{{ inc.ref }}</span>
+          <span>{{ (inc.quantity ~ 'x ') if inc.quantity and inc.quantity > 1 else '' }}{{ inc.name }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if item %}
+<script id="item-data" type="application/json">{{ item|tojson }}</script>
+<script>
+(function(){
+  const item = JSON.parse(document.getElementById('item-data').textContent);
+  document.getElementById('waConsultBtn').addEventListener('click', () => {
+    const brandName = (window.BRAND && window.BRAND.name) || 'la tienda';
+    let text = "Hola " + brandName + " 👋\n";
+    text += "Quiero consultar precio mayorista de:\n";
+    text += item.ref + "\n" + item.name + "\n";
+    text += "Precio mayorista: " + SWCart.money(item.price) + "\n\n";
+    text += "Quisiera más información (pedido mínimo {{ min_qty }} unidades).";
+    window.open(SWCart.waLink(text), "_blank");
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iniciar sesión | {{ brand.brand_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--lav:{{ brand.primary_color or '#6c8cff' }};--blue:{{ brand.accent_color or '#2541ff' }};--ink:#06060a;--fg:#f3f4f9;--fg-dim:rgba(243,244,249,.74);--muted:#9a9db2;--line:rgba(255,255,255,.14);--surface:#15161f;--surface-2:#1b1c28;--danger:#ff6b6b;}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--ink);font-family:'Archivo',Arial,sans-serif;color:var(--fg);padding:20px}
+.login-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:34px 30px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.login-brand{display:flex;align-items:center;gap:11px;margin-bottom:26px}
+.login-mark{width:42px;height:42px;border-radius:12px;background:var(--blue);color:#fff;display:grid;place-items:center;font-family:'Archivo',Impact,sans-serif;font-weight:900;font-style:italic;font-size:23px;flex:none;overflow:hidden}
+.login-mark img{width:100%;height:100%;object-fit:cover}
+.login-brand-name{font-family:'Archivo',Impact,sans-serif;font-weight:900;font-style:italic;font-size:19px;letter-spacing:.4px;color:var(--fg)}
+.login-brand-sub{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:var(--blue);text-transform:uppercase;margin-top:2px}
+h1{font-family:'Archivo',Impact,sans-serif;font-weight:900;font-style:italic;font-size:24px;margin:0 0 6px;color:var(--fg)}
+.login-card p.hint{color:var(--muted);font-size:12.5px;margin:0 0 22px}
+.alert{padding:11px 14px;margin-bottom:16px;border-radius:10px;font-size:12.5px;background:rgba(255,107,107,.14);color:var(--danger)}
+label{display:block;font-size:11px;font-weight:700;margin-bottom:6px;color:var(--fg-dim);font-family:'IBM Plex Mono',monospace;letter-spacing:.02em}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:9px;font:500 14px 'Archivo';outline:0;margin-bottom:16px;background:var(--surface-2);color:var(--fg)}
+input::placeholder{color:var(--muted)}
+input:focus{border-color:var(--lav);box-shadow:0 0 0 3px rgba(108,140,255,.25)}
+button{width:100%;border:0;border-radius:10px;padding:13px 15px;cursor:pointer;font:700 13px 'Archivo';background:var(--blue);color:#fff;box-shadow:0 7px 16px rgba(37,65,255,.3)}
+button:hover{filter:brightness(1.1)}
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-mark">
+        {% if brand.logo %}<img src="{{ url_for('uploaded_file', filename=brand.logo) }}" alt="{{ brand.brand_name }}">
+        {% else %}{{ (brand.brand_name or 'S')[:1]|upper }}{% endif %}
+      </div>
+      <div>
+        <div class="login-brand-name">{{ brand.brand_name }}</div>
+        <div class="login-brand-sub">Administración</div>
+      </div>
+    </div>
+    <h1>Iniciar sesión</h1>
+    <p class="hint">Acceso privado. Solo tú deberías tener estas credenciales.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="alert">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <form method="post">
+      <input type="hidden" name="next" value="{{ next }}">
+      <label for="username">Usuario</label>
+      <input type="text" id="username" name="username" autocomplete="username" required autofocus>
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>

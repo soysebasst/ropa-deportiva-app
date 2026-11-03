@@ -2,30 +2,49 @@
 {% block meta_title %}{{ brand.brand_name }} — {{ brand.tagline }}{% endblock %}
 {% block og_title %}{{ brand.brand_name }} — {{ brand.tagline }}{% endblock %}
 
-{% block header_actions %}
-<a class="pub-wholesale-btn" href="{{ url_for('mayoristas_catalog') }}">Mayoristas</a>
-<a class="cart-fab" href="{{ url_for('catalog_pedido') }}" id="cartFab">
-  <span class="cart-fab-icon">🛍</span>
-  <span class="cart-fab-label">MI PEDIDO</span>
-  <span class="cart-fab-count" id="cartFabCount">0</span>
-</a>
-{% endblock %}
-
 {% block subheader %}
 <div class="hero-land">
   {% if brand.banner_image %}<div class="home-banner-bg" style="background-image:url('{{ url_for('uploaded_file', filename=brand.banner_image) }}')"></div>{% endif %}
   <div class="hero-land-inner">
     <span class="home-banner-eyebrow">{{ brand.brand_name|upper }}</span>
-    <h1 class="home-banner-title">{{ brand.banner_title or 'ELEVA TU ESTILO' }}</h1>
-    {% if brand.banner_subtitle %}<p class="home-banner-subtitle">{{ brand.banner_subtitle }}</p>{% endif %}
+    {% if brand.banner_title %}
+    <h1 class="home-banner-title">{{ brand.banner_title }}</h1>
+    {% else %}
+    <h1 class="home-banner-title">CORTA EL<br><mark>LÍMITE.</mark></h1>
+    {% endif %}
+    <p class="home-banner-subtitle">{{ brand.banner_subtitle or ('Ropa deportiva para superar tus límites.') }}</p>
     <div class="hero-land-ctas">
-      <a class="pub-btn pub-btn-solid pub-btn-lg" href="{{ url_for('public_catalog') }}">{{ brand.banner_cta_text or 'Ver catálogo' }}</a>
+      <a class="pub-btn pub-btn-solid pub-btn-lg" href="{{ url_for('public_catalog') }}">{{ brand.banner_cta_text or 'EXPLORAR COLECCIÓN' }}</a>
       <a class="pub-btn pub-btn-outline-light pub-btn-lg" href="#categorias">Explorar categorías</a>
     </div>
   </div>
   {% if brand.hero_photo %}
   <img class="hero-land-photo" src="{{ url_for('uploaded_file', filename=brand.hero_photo) }}" alt="{{ brand.brand_name }}">
+  {% else %}
+  <div class="hero-land-graphic" aria-hidden="true">
+    <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#2541ff" stop-opacity=".55"/>
+          <stop offset="100%" stop-color="#2541ff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <rect x="40" y="0" width="420" height="500" fill="url(#heroGrad)" transform="skewX(-14)"/>
+      <text x="200" y="300" text-anchor="middle" font-family="Archivo, Impact, sans-serif" font-weight="900" font-style="italic" font-size="260" fill="rgba(255,255,255,.08)">ST</text>
+      <g stroke="#2541ff" stroke-width="3" opacity=".6">
+        <line x1="60" y1="120" x2="140" y2="90"/>
+        <line x1="80" y1="170" x2="160" y2="140"/>
+        <line x1="100" y1="220" x2="180" y2="190"/>
+      </g>
+    </svg>
+  </div>
   {% endif %}
+</div>
+<div class="hero-pillars">
+  <span class="hero-pillar"><span class="hero-pillar-ico">⚡</span>Rendimiento</span>
+  <span class="hero-pillar"><span class="hero-pillar-ico">◆</span>Comodidad</span>
+  <span class="hero-pillar"><span class="hero-pillar-ico">✓</span>Confianza</span>
+  <span class="hero-pillar"><span class="hero-pillar-ico">▲</span>Disciplina</span>
 </div>
 <div class="pub-float-card reveal-up">
   <div class="pub-float-card-inner">
@@ -45,7 +64,7 @@
 
 {% block content %}
 
-<section id="categorias" class="land-section">
+<section id="categorias" class="land-section land-section-light">
   <div class="pub-section-head reveal-up">
     <div><span class="pub-section-eyebrow">Encuentra lo tuyo</span><h2>Explora por categoría</h2></div>
     <a class="pub-view-all" href="{{ url_for('public_catalog') }}">Ver todo →</a>
@@ -67,30 +86,44 @@
   </div>
 </section>
 
-<section id="garantias" class="land-section">
-  <div class="pub-section-head reveal-up">
-    <div><span class="pub-section-eyebrow">Compra con confianza</span><h2>Garantías y envíos</h2></div>
+<section id="garantias" class="land-section-light land-benefits-strip">
+  <div class="benefits-row">
+    <div class="benefit-item reveal-up">
+      <span class="benefit-ico">🚚</span>
+      <div><strong>Envíos</strong><p>{{ brand.shipping_text }}</p></div>
+    </div>
+    <div class="benefit-item reveal-up">
+      <span class="benefit-ico">🔄</span>
+      <div><strong>Cambios y garantía</strong><p>{{ brand.warranty_text }}</p></div>
+    </div>
+    {% if brand.whatsapp_number %}
+    <div class="benefit-item reveal-up">
+      <span class="benefit-ico">💬</span>
+      <div><strong>Atención por WhatsApp</strong><p>Resolvemos tus dudas y confirmamos pedidos directo por chat.</p></div>
+    </div>
+    {% endif %}
+    <div class="benefit-item reveal-up">
+      <span class="benefit-ico">📍</span>
+      <div><strong>Ubicación</strong><p>{{ brand.location_text }}</p></div>
+    </div>
   </div>
-  <div class="guarantee-grid">
-    <div class="guarantee-card reveal-up">
-      <span class="guarantee-icon">🚚</span>
-      <h3>Envíos</h3>
-      <p>{{ brand.shipping_text }}</p>
+</section>
+
+<section class="land-section-flush land-blocks">
+  <div class="land-blocks-row">
+    <div class="land-block land-block-dark reveal-up">
+      <span class="land-block-eyebrow">{{ brand.brand_name|upper }}</span>
+      <h3>Más que ropa deportiva,<br>somos un estilo de vida.</h3>
+      <a class="pub-btn pub-btn-outline-light" href="{{ url_for('public_catalog') }}">Conoce más →</a>
     </div>
-    <div class="guarantee-card reveal-up">
-      <span class="guarantee-icon">🔄</span>
-      <h3>Cambios y garantía</h3>
-      <p>{{ brand.warranty_text }}</p>
+    <div class="land-block land-block-blue reveal-up">
+      <span class="land-block-eyebrow">Mayoristas</span>
+      <h3>Lleva tu negocio al siguiente nivel con nuestros precios especiales.</h3>
+      <a class="pub-btn pub-btn-solid-light" href="{{ url_for('mayoristas_catalog') }}">Solicitar información →</a>
     </div>
-    <div class="guarantee-card reveal-up">
-      <span class="guarantee-icon">📍</span>
-      <h3>Ubicación</h3>
-      <p>{{ brand.location_text }}</p>
-    </div>
-    <div class="guarantee-card reveal-up">
-      <span class="guarantee-icon">💬</span>
-      <h3>Síguenos</h3>
-      <p>Resolvemos tus dudas y confirmamos pedidos por estos canales.</p>
+    <div class="land-block land-block-dark reveal-up">
+      <span class="land-block-eyebrow">Síguenos</span>
+      <h3>en nuestras redes</h3>
       <div class="pub-social-row">
         {% if brand.instagram_url %}<a class="pub-social-btn" href="{{ brand.instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram">IG</a>{% endif %}
         {% if brand.facebook_url %}<a class="pub-social-btn" href="{{ brand.facebook_url }}" target="_blank" rel="noopener" aria-label="Facebook">FB</a>{% endif %}
@@ -101,7 +134,7 @@
 </section>
 
 {% if trending %}
-<section id="tendencia" class="land-section">
+<section id="tendencia" class="land-section land-section-light">
   <div class="pub-section-head reveal-up">
     <div><span class="pub-section-eyebrow">Lo nuevo</span><h2>En tendencia</h2></div>
     <a class="pub-view-all" href="{{ url_for('public_catalog') }}">Ver todo →</a>

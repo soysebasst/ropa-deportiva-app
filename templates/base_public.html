@@ -37,6 +37,17 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
 </head>
 <body class="pub-body">
 
+<div class="pub-topbar">
+  <div class="pub-topbar-inner">
+    <span class="pub-topbar-item"><span class="pub-topbar-ico">🚚</span>Envíos a todo el país</span>
+    <span class="pub-topbar-item"><span class="pub-topbar-ico">✅</span>Pedidos 100% por WhatsApp</span>
+    {% if brand.whatsapp_number %}
+    <a class="pub-topbar-item pub-topbar-link" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener"><span class="pub-topbar-ico">💬</span>Escríbenos ahora</a>
+    {% else %}
+    <span class="pub-topbar-item"><span class="pub-topbar-ico">⭐</span>Atención personalizada</span>
+    {% endif %}
+  </div>
+</div>
 {% if brand.announcement_text %}
 <div class="pub-announcement">{{ brand.announcement_text }}</div>
 {% endif %}
@@ -51,17 +62,22 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
         {% if brand.tagline %}<span class="pub-tagline">{{ brand.tagline }}</span>{% endif %}
       </span>
     </a>
+    {% block header_actions %}
+    <nav class="pub-nav">
+      <a class="pub-nav-link {{ 'is-active' if request.path == url_for('landing_page') else '' }}" href="{{ url_for('landing_page') }}">Inicio</a>
+      <a class="pub-nav-link {{ 'is-active' if request.path == url_for('public_catalog') else '' }}" href="{{ url_for('public_catalog') }}">Tienda</a>
+      <a class="pub-nav-link" href="{{ url_for('landing_page') }}#categorias">Categorías</a>
+      <a class="pub-nav-link {{ 'is-active' if request.path == url_for('mayoristas_catalog') else '' }}" href="{{ url_for('mayoristas_catalog') }}">Mayoristas</a>
+      {% if brand.whatsapp_number %}<a class="pub-nav-link" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">Contacto</a>{% endif %}
+    </nav>
     <div class="pub-header-actions">
-      {% block header_actions %}
-      <a class="pub-back-link pub-nav-link" href="{{ url_for('public_catalog') }}">Catálogo</a>
-      <a class="pub-wholesale-btn" href="{{ url_for('mayoristas_catalog') }}">Mayoristas</a>
       <a class="cart-fab" href="{{ url_for('catalog_pedido') }}" id="cartFab">
         <span class="cart-fab-icon">🛍</span>
         <span class="cart-fab-label">MI PEDIDO</span>
         <span class="cart-fab-count" id="cartFabCount">0</span>
       </a>
-      {% endblock %}
     </div>
+    {% endblock %}
   </div>
 </header>
 

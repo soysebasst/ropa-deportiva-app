@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block pagetitle %}{{ product.reference }}{% endblock %}
+{% block eyebrow %}FICHA DE PRODUCTO{% endblock %}
+{% block heading %}{{ product.reference }}{% endblock %}
+{% block content %}
+<div class="ficha">
+  <div class="ficha-image">
+    {% if product.image %}<img src="{{ url_for('uploaded_file', filename=product.image) }}">{% else %}<div class="placeholder big">SIN IMAGEN</div>{% endif %}
+  </div>
+  <div class="ficha-info">
+    <div class="section-kicker">{{ product.category }}</div>
+    <span class="publish-chip inline {{ 'is-published' if product.published else 'is-hidden' }}">{{ 'Publicado en el catálogo' if product.published else 'Oculto del catálogo' }}</span>
+    <div class="ficha-ref">{{ product.reference }}</div>
+    <h2 class="ficha-title">{{ product.name }}</h2>
+
+    <div class="ficha-prices">
+      <div><small>COSTO</small><b>{{ product.cost|money }}</b></div>
+      <div class="sale"><small>VENTA</small><b>{{ product.sale_price|money }}</b></div>
+    </div>
+
+    <div class="ficha-block">
+      <span class="label">TALLAS</span>
+      <div class="pill-row">
+        {% for t in (product.sizes or '').split(',') if t.strip() %}<span class="pill">{{ t.strip() }}</span>{% else %}<span class="muted">Sin tallas definidas</span>{% endfor %}
+      </div>
+    </div>
+
+    <div class="ficha-block">
+      <span class="label">COLORES</span>
+      {% if colors %}
+      <div class="color-grid">
+        {% for c in colors %}
+        <div class="color-card">
+          {% if c.image %}<img src="{{ url_for('uploaded_file', filename=c.image) }}">{% else %}<div class="color-thumb-lg placeholder-thumb">S/I</div>{% endif %}
+          <span>{{ c.color }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<p class="muted">Este producto no tiene colores registrados.</p>{% endif %}
+    </div>
+
+    {% if product.description %}
+    <div class="ficha-block">
+      <span class="label">DESCRIPCIÓN</span>
+      <p class="description-text">{{ product.description }}</p>
+    </div>
+    {% endif %}
+
+    <div class="ficha-meta">
+      <span>Creado: {{ product.created_at }}</span>
+      <span>Última modificación: {{ product.updated_at or product.created_at }}</span>
+    </div>
+
+    <div class="form-actions">
+      <a class="secondary" href="{{ url_for('products_list') }}">Volver</a>
+      <form method="post" action="{{ url_for('product_toggle_published', pid=product.id) }}">
+        <button class="secondary" type="submit">{{ 'Ocultar del catálogo' if product.published else 'Publicar en el catálogo' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('product_delete', pid=product.id) }}" onsubmit="return confirm('¿Eliminar la referencia {{ product.reference }}? Esta acción no se puede deshacer.')">
+        <button class="danger" type="submit">Eliminar</button>
+      </form>
+      <a class="primary" href="{{ url_for('product_edit', pid=product.id) }}">EDITAR PRODUCTO</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

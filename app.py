@@ -5,6 +5,10 @@ from pathlib import Path
 from datetime import datetime
 import sqlite3, uuid, os, shutil, hmac
 
+from reportlab.lib.colors import HexColor, white
+from reportlab.pdfgen import canvas as rl_canvas
+from reportlab.pdfbase.pdfmetrics import stringWidth
+
 BASE = Path(__file__).resolve().parent
 
 # En local, DATA_DIR no se configura y todo queda donde siempre (junto al
@@ -1294,6 +1298,157 @@ def landing_categories(conn, items, limit=6):
             "url": url_for("public_catalog") + "#pubGrid",
         })
     return out[:limit]
+
+
+# ---------------------------------------------------------------------------
+# Guía de envío (PDF) — media carta, con remitente fijo y destinatario a mano
+# ---------------------------------------------------------------------------
+SHIP_LABEL_W = 8.5 * 72  # media hoja carta en apaisado: 8.5 x 5.5 in
+SHIP_LABEL_H = 5.5 * 72
+
+REMITENTE = {
+    "nombre": "SEBASTIAN ARTURO TORRES GOMEZ",
+    "cc": "1127053027",
+    "correo": "SATG173@GMAIL.COM",
+    "celular": "315 248 7601",
+    "direccion": "Cra. 7 #6-74, Villa Del Rosario, Cúcuta",
+}
+
+_SHIP_INK = HexColor("#06060a")
+_SHIP_BLUE = HexColor("#2541ff")
+_SHIP_LAV = HexColor("#6c8cff")
+_SHIP_MUTED = HexColor("#6e7280")
+_SHIP_LINE = HexColor("#dcdde6")
+
+
+def _draw_bolt(c, x, y, size, color, opacity=1.0):
+    """Dibuja un pequeño rayo (lightning bolt) relleno, como el de la marca."""
+    pts = [(62, 0), (10, 95), (48, 95), (38, 160), (92, 60), (52, 60)]
+    scale = size / 160.0
+    c.saveState()
+    try:
+        c.setFillColor(color, alpha=opacity)
+    except TypeError:
+        c.setFillColor(color)
+    p = c.beginPath()
+    p.moveTo(x + pts[0][0] * scale, y + pts[0][1] * scale)
+    for px, py in pts[1:]:
+        p.lineTo(x + px * scale, y + py * scale)
+    p.close()
+    c.drawPath(p, fill=1, stroke=0)
+    c.restoreState()
+
+
+def _ship_badge(c, x, y, size):
+    """Insignia cuadrada redondeada con el monograma ST, igual al logo nuevo."""
+    c.saveState()
+    c.setFillColor(_SHIP_BLUE)
+    c.roundRect(x, y, size, size, size * 0.22, fill=1, stroke=0)
+    c.setFillColor(white)
+    c.setFont("Helvetica-Bold", size * 0.52)
+    c.drawCentredString(x + size / 2, y + size * 0.32, "ST")
+    c.restoreState()
+
+
+def build_shipping_label_pdf(dest):
+    buf = io.BytesIO()
+    c = rl_canvas.Canvas(buf, pagesize=(SHIP_LABEL_W, SHIP_LABEL_H))
+    W, H = SHIP_LABEL_W, SHIP_LABEL_H
+
+    # Fondo blanco + banda superior oscura de marca
+    c.setFillColor(white)
+    c.rect(0, 0, W, H, fill=1, stroke=0)
+
+    band_h = 92
+    c.setFillColor(_SHIP_INK)
+    c.rect(0, H - band_h, W, band_h, fill=1, stroke=0)
+    c.setFillColor(_SHIP_BLUE)
+    c.rect(0, H - band_h - 3, W, 3, fill=1, stroke=0)
+    _draw_bolt(c, W - 70, H - band_h + 14, 60, _SHIP_LAV, opacity=0.18)
+
+    _ship_badge(c, 22, H - band_h + 18, 56)
+    c.setFillColor(white)
+    c.setFont("Helvetica-Bold", 20)
+    c.drawString(92, H - band_h + 52, "@SPORTSWEAR_ST")
+    c.setFillColor(HexColor("#c7cbe8"))
+    c.setFont("Helvetica-Bold", 9.5)
+    c.drawString(92, H - band_h + 32, "GUÍA DE ENVÍO")
+
+    # ---- Remitente (fijo) ----
+    top = H - band_h - 24
+    c.setFillColor(_SHIP_BLUE)
+    c.setFont("Helvetica-Bold", 10.5)
+    c.drawString(28, top, "REMITENTE")
+    c.setFillColor(_SHIP_INK)
+    c.setFont("Helvetica-Bold", 11.5)
+    c.drawString(28, top - 18, f"{REMITENTE['nombre']} — CC: {REMITENTE['cc']}")
+    c.setFont("Helvetica", 10)
+    c.setFillColor(HexColor("#2a2b35"))
+    c.drawString(28, top - 34, f"Correo: {REMITENTE['correo']}  ·  Celular: {REMITENTE['celular']}")
+    c.drawString(28, top - 50, REMITENTE["direccion"])
+
+    # ---- Divisor ----
+    c.setStrokeColor(_SHIP_LINE)
+    c.setLineWidth(1)
+    c.line(28, top - 66, W - 28, top - 66)
+
+    # ---- Destinatario (a completar) ----
+    c.setFillColor(_SHIP_BLUE)
+    c.setFont("Helvetica-Bold", 10.5)
+    c.drawString(28, top - 86, "DESTINATARIO")
+
+    fields = [
+        ("NOMBRE", dest.get("nombre", "")),
+        ("CC", dest.get("cc", "")),
+        ("DIRECCIÓN", dest.get("direccion", "")),
+        ("CIUDAD", dest.get("ciudad", "")),
+        ("CELULAR", dest.get("celular", "")),
+    ]
+    y = top - 110
+    label_w = 86
+    for label, value in fields:
+        c.setFillColor(_SHIP_MUTED)
+        c.setFont("Helvetica-Bold", 9.5)
+        c.drawString(28, y, f"{label}:")
+        c.setFillColor(_SHIP_INK)
+        c.setFont("Helvetica-Bold" if value else "Helvetica", 12.5)
+        c.drawString(28 + label_w, y, value if value else "")
+        c.setStrokeColor(_SHIP_LINE)
+        c.setLineWidth(1)
+        c.line(28 + label_w, y - 6, W - 28, y - 6)
+        y -= 32
+
+    # ---- Pie ----
+    _draw_bolt(c, 24, 14, 20, _SHIP_LAV, opacity=0.6)
+    c.setFillColor(_SHIP_MUTED)
+    c.setFont("Helvetica", 8)
+    c.drawString(52, 20, "sportswear_ST — ropa deportiva para tu estilo")
+
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    return buf.read()
+
+
+@app.route("/envios", methods=["GET", "POST"])
+def shipping_label():
+    if request.method == "POST":
+        dest = {
+            "nombre": (request.form.get("nombre") or "").strip(),
+            "cc": (request.form.get("cc") or "").strip(),
+            "direccion": (request.form.get("direccion") or "").strip(),
+            "ciudad": (request.form.get("ciudad") or "").strip(),
+            "celular": (request.form.get("celular") or "").strip(),
+        }
+        pdf_bytes = build_shipping_label_pdf(dest)
+        safe_name = secure_filename(dest["nombre"]) or "destinatario"
+        filename = f"guia_envio_{safe_name}.pdf"
+        return Response(
+            pdf_bytes,
+            mimetype="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    return render_template("shipping_label.html", remitente=REMITENTE)
 
 
 @app.route("/inicio")

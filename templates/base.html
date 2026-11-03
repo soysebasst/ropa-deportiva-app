@@ -28,6 +28,7 @@
       <a class="nav-item {{ 'active' if request.path.startswith('/conjuntos') else '' }}" href="{{ url_for('sets_list') }}"><span>◈</span>Conjuntos</a>
       <a class="nav-item {{ 'active' if request.path.startswith('/ventas') else '' }}" href="{{ url_for('sales_list') }}"><span>💵</span>Ventas</a>
       <a class="nav-item {{ 'active' if request.path.startswith('/categorias') else '' }}" href="{{ url_for('categories_page') }}"><span>▤</span>Categorías</a>
+      <a class="nav-item {{ 'active' if request.path.startswith('/envios') else '' }}" href="{{ url_for('shipping_label') }}"><span>⚡</span>Guía de envío</a>
       <a class="nav-item {{ 'active' if request.path.startswith('/configuracion') else '' }}" href="{{ url_for('settings_page') }}"><span>⚙</span>Configuración</a>
     </nav>
     <div class="sidebar-foot">

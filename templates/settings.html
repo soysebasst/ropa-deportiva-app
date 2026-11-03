@@ -30,6 +30,18 @@
   </div>
 
   <div class="form-section">
+    <h3>Barra de anuncio</h3>
+    <p class="muted">Texto delgado que aparece encima del encabezado en todo el catálogo público, como un aviso fijo.</p>
+    <label>Texto del anuncio<input name="announcement_text" placeholder="Escríbenos por WhatsApp y te ayudamos a elegir tu talla." value="{{ brand.announcement_text }}"></label>
+  </div>
+
+  <div class="form-section">
+    <h3>Frase grande (statement)</h3>
+    <p class="muted">Texto grande y en mayúsculas que aparece como separador entre secciones del catálogo. Déjalo vacío para no mostrarlo.</p>
+    <label>Frase<input name="statement_text" placeholder="HECHO PARA MOVERTE" value="{{ brand.statement_text }}"></label>
+  </div>
+
+  <div class="form-section">
     <h3>Contacto y redes</h3>
     <p class="muted">El número de WhatsApp se usa para armar automáticamente los mensajes de pedido del catálogo público. Formato recomendado: código de país + número, ej. 573001234567.</p>
     <div class="row">

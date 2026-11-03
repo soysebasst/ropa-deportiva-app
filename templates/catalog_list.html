@@ -21,9 +21,13 @@
     {% endfor %}
   </div>
 </div>
+{% if brand.statement_text %}
+<div class="pub-statement"><p class="pub-statement-text">{{ brand.statement_text }}</p></div>
+{% endif %}
 {% endblock %}
 
 {% block content %}
+<div class="pub-section-head"><h2>Catálogo</h2></div>
 <div class="pub-grid" id="pubGrid">
 {% for it in items %}
   <article class="pub-card"

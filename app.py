@@ -117,6 +117,9 @@ DEFAULT_SETTINGS = {
     "banner_title": "NUEVA COLECCIÓN",
     "banner_subtitle": "Ropa deportiva para tu estilo.",
     "banner_cta_text": "Ver catálogo",
+    # Barra de anuncio (encima del header) y frase grande tipo "statement"
+    "announcement_text": "Escríbenos por WhatsApp y te ayudamos a elegir tu talla.",
+    "statement_text": "",
     # Catálogo mayorista (/mayoristas)
     "wholesale_min_qty": "6",
     "wholesale_note": "",
@@ -1113,6 +1116,7 @@ def settings_page():
             for key in (
                 "tagline", "short_description", "instagram_url", "whatsapp_number",
                 "banner_title", "banner_subtitle", "banner_cta_text",
+                "announcement_text", "statement_text",
                 "wholesale_min_qty", "wholesale_note",
             ):
                 val = request.form.get(key, "").strip()

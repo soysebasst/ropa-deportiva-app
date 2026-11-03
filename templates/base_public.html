@@ -37,6 +37,10 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
 </head>
 <body class="pub-body">
 
+{% if brand.announcement_text %}
+<div class="pub-announcement">{{ brand.announcement_text }}</div>
+{% endif %}
+
 <header class="pub-header">
   <div class="pub-header-inner">
     <a class="pub-brand" href="{{ url_for('public_catalog') }}">

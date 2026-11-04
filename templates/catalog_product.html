@@ -36,7 +36,10 @@
   </div>
 
   <div class="pdp-info">
-    <div class="pub-eyebrow">{{ item.category }}</div>
+    <div class="pdp-eyebrow-row">
+      <div class="pub-eyebrow">{{ item.category }}</div>
+      <button type="button" class="fav-btn fav-btn-pdp" data-ref="{{ item.ref }}" aria-label="Guardar en favoritos">♥ Guardar</button>
+    </div>
     <div class="pdp-ref">{{ item.ref }}</div>
     <h1 class="pdp-title">{{ item.name }}</h1>
     <div class="pdp-price">{{ item.price|money }}</div>
@@ -125,6 +128,32 @@
     {% endif %}
   </div>
 </div>
+
+{% if related %}
+<section class="pdp-related">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Combina con</span><h2>También te puede interesar</h2></div>
+  </div>
+  <div class="pub-grid pdp-related-grid">
+    {% for it in related %}
+    <article class="pub-card">
+      <a href="{{ it.url }}" class="pub-card-imgwrap">
+        {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
+        <span class="pub-cat-chip">{{ it.category }}</span>
+      </a>
+      <div class="pub-card-body">
+        <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+        <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
+        <div class="pub-card-price">{{ it.price|money }}</div>
+        <div class="pub-card-actions">
+          <a class="pub-btn pub-btn-outline" href="{{ it.url }}">Ver producto</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 {% if item.sizes %}
 <div class="size-guide-modal" id="sizeGuideModal" aria-hidden="true">

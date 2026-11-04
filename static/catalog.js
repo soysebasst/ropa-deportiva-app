@@ -242,6 +242,142 @@
 })(window);
 
 /* =========================================================
+   FAVORITOS — guardado en localStorage (sin cuenta/login).
+   Solo aplica al catálogo público (no a la lista mayorista, que es
+   un flujo distinto para revendedores). Se guardan referencias (ref)
+   y se resuelven siempre contra /api/catalogo/items al abrir el modal,
+   así nunca se muestran datos desactualizados.
+   ========================================================= */
+(function (global) {
+  "use strict";
+  var FAV_KEY = "sportswearst_favoritos_v1";
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(FAV_KEY);
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) { return []; }
+  }
+
+  function save(refs) {
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(refs)); } catch (e) { /* no disponible */ }
+    updateBadge();
+  }
+
+  function has(ref) { return load().indexOf(ref) !== -1; }
+
+  function toggle(ref) {
+    var refs = load();
+    var i = refs.indexOf(ref);
+    if (i === -1) { refs.push(ref); } else { refs.splice(i, 1); }
+    save(refs);
+    return i === -1; // true = se agregó, false = se quitó
+  }
+
+  function count() { return load().length; }
+
+  function updateBadge() {
+    var n = count();
+    document.querySelectorAll("#favFabCount, .fav-fab-count").forEach(function (el) { el.textContent = n; });
+    document.querySelectorAll("#favFab, .fav-fab").forEach(function (el) { el.classList.toggle("has-items", n > 0); });
+    document.querySelectorAll(".fav-btn").forEach(function (btn) {
+      btn.classList.toggle("active", has(btn.dataset.ref));
+    });
+  }
+
+  function wireButtons(root) {
+    (root || document).querySelectorAll(".fav-btn").forEach(function (btn) {
+      if (btn.__favWired) return;
+      btn.__favWired = true;
+      btn.classList.toggle("active", has(btn.dataset.ref));
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var added = toggle(btn.dataset.ref);
+        btn.classList.toggle("active", added);
+        if (global.SWCart) global.SWCart.toast(added ? "Agregado a favoritos" : "Quitado de favoritos");
+      });
+    });
+  }
+
+  function renderModal() {
+    var modal = document.getElementById("favModal");
+    var list = document.getElementById("favModalList");
+    if (!modal || !list) return;
+    var refs = load();
+    if (!refs.length) {
+      list.innerHTML = '<p class="fav-modal-empty">Todavía no has guardado favoritos. Toca el corazón en cualquier producto para guardarlo aquí.</p>';
+      return;
+    }
+    list.innerHTML = '<p class="fav-modal-empty">Cargando...</p>';
+    fetch("/api/catalogo/items")
+      .then(function (r) { return r.json(); })
+      .then(function (items) {
+        var found = items.filter(function (it) { return refs.indexOf(it.ref) !== -1; });
+        if (!found.length) {
+          list.innerHTML = '<p class="fav-modal-empty">Los productos que guardaste ya no están disponibles.</p>';
+          return;
+        }
+        list.innerHTML = "";
+        found.forEach(function (it) {
+          var row = document.createElement("div");
+          row.className = "fav-modal-item";
+          row.innerHTML =
+            '<a href="' + it.url + '" class="fav-modal-imgwrap">' +
+              (it.image ? '<img src="' + it.image + '" alt="">' : '<div class="pub-placeholder"></div>') +
+            '</a>' +
+            '<div class="fav-modal-info">' +
+              '<a href="' + it.url + '" class="fav-modal-name">' + it.name + '</a>' +
+              '<span class="fav-modal-price">' + (global.SWCart ? global.SWCart.money(it.price) : it.price) + '</span>' +
+            '</div>' +
+            '<button type="button" class="fav-modal-remove" data-ref="' + it.ref + '" aria-label="Quitar de favoritos">✕</button>';
+          list.appendChild(row);
+        });
+        list.querySelectorAll(".fav-modal-remove").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            toggle(btn.dataset.ref);
+            renderModal();
+          });
+        });
+      })
+      .catch(function () {
+        list.innerHTML = '<p class="fav-modal-empty">No se pudieron cargar tus favoritos. Intenta de nuevo.</p>';
+      });
+  }
+
+  function wireModal() {
+    var favFab = document.getElementById("favFab");
+    var modal = document.getElementById("favModal");
+    if (!favFab || !modal) return;
+    var backdrop = document.getElementById("favModalBackdrop");
+    var closeBtn = document.getElementById("favModalClose");
+    var open = function (e) {
+      if (e) e.preventDefault();
+      renderModal();
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    };
+    var close = function () {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    };
+    favFab.addEventListener("click", open);
+    if (backdrop) backdrop.addEventListener("click", close);
+    if (closeBtn) closeBtn.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  }
+
+  global.SWFavs = { load: load, save: save, has: has, toggle: toggle, count: count, updateBadge: updateBadge, wireButtons: wireButtons };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    wireButtons();
+    wireModal();
+    updateBadge();
+  });
+})(window);
+
+/* =========================================================
    CAPA DE MOVIMIENTO — aditiva, no cambia la lógica del pedido.
    Principios: animar solo transform/opacity, curvas fuertes de salida,
    menos de 300 ms en interacciones y respeto por "reducir movimiento".

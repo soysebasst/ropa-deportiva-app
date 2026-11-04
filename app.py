@@ -1575,7 +1575,10 @@ def catalog_product(reference):
         conn.close()
     ref_upper = reference.strip().upper()
     item = next((it for it in items if it["ref"].upper() == ref_upper), None)
-    return render_template("catalog_product.html", item=item, items=items, size_guide=size_guide)
+    related = []
+    if item:
+        related = [it for it in items if it["category"] == item["category"] and it["ref"].upper() != ref_upper][:4]
+    return render_template("catalog_product.html", item=item, items=items, size_guide=size_guide, related=related)
 
 
 @app.route("/catalogo/pedido")
@@ -1699,10 +1702,13 @@ def mayorista_product(reference):
         conn.close()
     ref_upper = reference.strip().upper()
     item = next((it for it in items if it["ref"].upper() == ref_upper), None)
+    related = []
+    if item:
+        related = [it for it in items if it["category"] == item["category"] and it["ref"].upper() != ref_upper][:4]
     return render_template(
         "mayoristas_product.html", item=item, items=items,
         min_qty=settings_.get("wholesale_min_qty") or "6",
-        size_guide=size_guide,
+        size_guide=size_guide, related=related,
     )
 
 

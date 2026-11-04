@@ -152,7 +152,10 @@
         {% endif %}
       </a>
       <div class="pub-card-body">
-        <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+        <div class="pub-card-ref-row">
+          <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+          <button type="button" class="fav-btn" data-ref="{{ it.ref }}" aria-label="Guardar en favoritos">♥</button>
+        </div>
         <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
         <div class="pub-card-price">{{ it.price|money }}</div>
         {% if it.colors %}

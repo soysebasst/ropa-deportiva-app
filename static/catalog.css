@@ -111,9 +111,12 @@ html{scroll-behavior:smooth}
 .cat-nav::-webkit-scrollbar{display:none}
 
 /* ---------------- buscador de catálogo ---------------- */
-.catalog-search-wrap{background:var(--ink); padding:16px 20px 4px}
+.catalog-search-wrap{
+  background:var(--ink); padding:16px 20px 4px; max-width:1240px; margin:0 auto;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
 .catalog-search{
-  max-width:1240px; margin:0 auto; display:flex; align-items:center; gap:10px;
+  flex:1 1 260px; display:flex; align-items:center; gap:10px;
   background:var(--surface); border:1.5px solid var(--line); border-radius:99px; padding:12px 18px;
 }
 .catalog-search-ico{font-size:14px; flex:none; opacity:.7}
@@ -122,6 +125,11 @@ html{scroll-behavior:smooth}
   font:600 14px 'Archivo',sans-serif;
 }
 .catalog-search input::placeholder{color:var(--muted)}
+.catalog-sort{
+  flex:0 0 auto; background:var(--surface); border:1.5px solid var(--line); border-radius:99px;
+  padding:12px 16px; color:var(--fg); font:700 12px 'Archivo',sans-serif; outline:0; cursor:pointer;
+}
+@media(max-width:560px){.catalog-search-wrap{padding:14px 16px 2px}.catalog-sort{flex:1 1 100%}}
 .cat-chip{
   flex:0 0 auto; border:1.5px solid var(--line); background:var(--surface); color:var(--fg);
   font:800 11px 'Archivo',sans-serif; letter-spacing:.06em; padding:10px 16px; border-radius:99px; cursor:pointer; white-space:nowrap;
@@ -357,6 +365,7 @@ html{scroll-behavior:smooth}
 .pub-ribbon{position:absolute; top:10px; right:10px; background:var(--lav); color:var(--ink); font:800 9px 'IBM Plex Mono',monospace; letter-spacing:.04em; padding:5px 10px; border-radius:99px; box-shadow:0 6px 14px rgba(45,66,255,.25); z-index:2}
 .pub-card-body{padding:12px 14px 16px; display:flex; flex-direction:column; gap:5px; flex:1}
 .pub-card-ref{font:800 10px 'IBM Plex Mono',monospace; letter-spacing:.1em; color:var(--blue); text-decoration:none}
+.pub-card-ref-row{display:flex; align-items:center; justify-content:space-between; gap:8px}
 .pub-card-name{font:700 14px/1.25 'Archivo',sans-serif; color:var(--fg); text-decoration:none; min-height:2.4em}
 .pub-card-price{font-family:'Archivo',Impact,sans-serif; font-style:italic; font-size:19px; font-weight:900; margin-top:2px}
 .pub-savings-chip{display:none}
@@ -367,6 +376,10 @@ html{scroll-behavior:smooth}
 .pub-dot.active{border-color:#fff; box-shadow:0 0 0 2px var(--blue)}
 .pub-card-actions{display:flex; gap:8px; margin-top:8px}
 .pub-card-actions .pub-btn{flex:1; padding:11px 10px; font-size:11px}
+
+/* ---------------- "también te puede interesar" ---------------- */
+.pdp-related{margin-top:56px}
+.pdp-related-grid{margin-top:18px}
 
 /* ---------------- ficha de producto ---------------- */
 .pdp{display:grid; grid-template-columns:1fr; gap:28px}
@@ -502,6 +515,64 @@ html{scroll-behavior:smooth}
 .cart-fab-count{background:#fff; color:var(--blue); border-radius:50%; min-width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; padding:0 5px; font-weight:900}
 .cart-fab:not(.has-items) .cart-fab-count{opacity:.55}
 @media(min-width:480px){.cart-fab-label{display:inline}}
+
+/* ---------------- botón flotante de WhatsApp (todo el sitio) ---------------- */
+.wa-float-btn{
+  position:fixed; right:18px; bottom:18px; z-index:60; width:56px; height:56px; border-radius:50%;
+  background:var(--wa); color:#fff; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 12px 28px rgba(37,211,102,.45); transition:transform 160ms ease, box-shadow 160ms ease;
+}
+.wa-float-btn svg{width:28px; height:28px; fill:currentColor}
+.wa-float-btn:hover{transform:scale(1.07); box-shadow:0 16px 32px rgba(37,211,102,.55)}
+@media(max-width:600px){.wa-float-btn{right:14px; bottom:14px; width:50px; height:50px}.wa-float-btn svg{width:25px; height:25px}}
+
+/* ---------------- favoritos: corazón en tarjeta/botón del header/modal ---------------- */
+.fav-btn{
+  background:transparent; border:0; cursor:pointer; color:var(--muted); font-size:15px; line-height:1;
+  padding:2px; flex:none; transition:color 160ms ease, transform 160ms ease;
+}
+.fav-btn:hover{transform:scale(1.15)}
+.fav-btn.active{color:#ef4444}
+.fav-btn-pdp{
+  display:inline-flex; align-items:center; gap:5px; font:700 10.5px 'IBM Plex Mono',monospace; letter-spacing:.03em;
+  color:var(--muted); border:1px solid var(--line); border-radius:99px; padding:5px 12px;
+}
+.fav-btn-pdp.active{color:#ef4444; border-color:#ef4444}
+.pdp-eyebrow-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:2px}
+
+.fav-fab{
+  flex:0 0 auto; display:flex; align-items:center; gap:5px; background:var(--surface); color:var(--fg);
+  border:1.5px solid var(--line); padding:10px 12px; border-radius:99px; cursor:pointer;
+  font:800 11px 'Archivo',sans-serif; transition:.15s;
+}
+.fav-fab:active{transform:scale(.96)}
+.fav-fab-icon{font-size:14px; color:var(--muted)}
+.fav-fab.has-items .fav-fab-icon{color:#ef4444}
+.fav-fab-count{background:var(--surface-2); color:var(--fg); border-radius:50%; min-width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; padding:0 5px; font-weight:900}
+
+.fav-modal{position:fixed; inset:0; z-index:250; display:none; align-items:center; justify-content:center; padding:20px}
+.fav-modal.open{display:flex}
+.fav-modal-backdrop{position:absolute; inset:0; background:rgba(6,6,10,.6); backdrop-filter:blur(2px)}
+.fav-modal-card{
+  position:relative; z-index:2; background:var(--surface); border-radius:var(--radius-lg); padding:28px 22px 22px;
+  max-width:460px; width:100%; max-height:80vh; overflow:auto; box-shadow:0 30px 60px rgba(10,10,15,.3); color:var(--fg);
+}
+.fav-modal-card h3{font-family:'Archivo',Impact,sans-serif; font-weight:900; font-style:italic; font-size:19px; margin:0 0 16px; color:var(--fg)}
+.fav-modal-close{
+  position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:50%; border:0; cursor:pointer;
+  background:var(--soft); color:var(--fg); font-size:13px; display:flex; align-items:center; justify-content:center;
+}
+.fav-modal-close:hover{background:var(--blue); color:#fff}
+.fav-modal-empty{font-size:13px; color:var(--muted); line-height:1.6; margin:0}
+.fav-modal-item{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line)}
+.fav-modal-item:last-child{border-bottom:0}
+.fav-modal-imgwrap{width:52px; height:52px; border-radius:10px; overflow:hidden; background:var(--soft); flex:none; display:block}
+.fav-modal-imgwrap img{width:100%; height:100%; object-fit:cover}
+.fav-modal-info{flex:1; display:flex; flex-direction:column; gap:2px; min-width:0}
+.fav-modal-name{color:var(--fg); font:700 13px 'Archivo',sans-serif; text-decoration:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.fav-modal-price{font:700 11px 'IBM Plex Mono',monospace; color:var(--blue)}
+.fav-modal-remove{background:transparent; border:0; cursor:pointer; color:var(--muted); font-size:13px; flex:none; padding:4px}
+.fav-modal-remove:hover{color:#ef4444}
 
 /* ---------------- toast ---------------- */
 .sw-toast{

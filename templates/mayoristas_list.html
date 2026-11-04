@@ -17,6 +17,11 @@
     <span class="catalog-search-ico">🔎</span>
     <input type="search" id="catalogSearch" placeholder="Buscar por nombre o referencia..." autocomplete="off">
   </div>
+  <select class="catalog-sort" id="catalogSort">
+    <option value="">Orden por defecto</option>
+    <option value="price_asc">Menor precio</option>
+    <option value="price_desc">Mayor precio</option>
+  </select>
 </div>
 <div class="cat-nav-wrap">
   <div class="cat-nav" id="catNav">
@@ -31,7 +36,7 @@
 {% block content %}
 <div class="pub-grid" id="pubGrid">
 {% for it in items %}
-  <article class="pub-card" data-category="{{ it.category }}" data-ref="{{ it.ref }}" data-name="{{ it.name|lower }}">
+  <article class="pub-card" data-category="{{ it.category }}" data-ref="{{ it.ref }}" data-name="{{ it.name|lower }}" data-price="{{ it.price }}">
     <a href="{{ it.url }}" class="pub-card-imgwrap">
       {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
       <span class="pub-cat-chip">{{ it.category }}</span>
@@ -63,6 +68,7 @@
   const cards = Array.from(grid.querySelectorAll('.pub-card'));
   const catNav = document.getElementById('catNav');
   const searchInput = document.getElementById('catalogSearch');
+  const sortSelect = document.getElementById('catalogSort');
   let activeCat = '';
   let searchTerm = '';
   function applyFilter(){
@@ -74,11 +80,24 @@
       c.style.display = (matchesCat && matchesSearch) ? '' : 'none';
     });
   }
+  function applySort(){
+    if (!sortSelect || !sortSelect.value) return;
+    const mode = sortSelect.value;
+    const sorted = cards.slice().sort((a, b) => {
+      if (mode === 'price_asc') return (parseFloat(a.dataset.price) || 0) - (parseFloat(b.dataset.price) || 0);
+      if (mode === 'price_desc') return (parseFloat(b.dataset.price) || 0) - (parseFloat(a.dataset.price) || 0);
+      return 0;
+    });
+    sorted.forEach(c => grid.appendChild(c));
+  }
   if (searchInput) {
     searchInput.addEventListener('input', () => {
       searchTerm = searchInput.value.trim().toLowerCase();
       applyFilter();
     });
+  }
+  if (sortSelect) {
+    sortSelect.addEventListener('change', applySort);
   }
   catNav.addEventListener('click', (e) => {
     const btn = e.target.closest('.cat-chip');

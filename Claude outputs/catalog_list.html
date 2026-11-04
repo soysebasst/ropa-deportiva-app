@@ -1,0 +1,158 @@
+{% extends "base_public.html" %}
+{% block meta_title %}{{ brand.brand_name }} — Catálogo{% endblock %}
+{% block og_title %}{{ brand.brand_name }} — Catálogo{% endblock %}
+
+{% block subheader %}
+<div class="pub-breadcrumb">
+  <a href="{{ url_for('landing_page') }}">← Inicio</a>
+</div>
+<div class="catalog-search-wrap">
+  <div class="catalog-search">
+    <span class="catalog-search-ico">🔎</span>
+    <input type="search" id="catalogSearch" placeholder="Buscar por nombre o referencia..." autocomplete="off">
+  </div>
+  <select class="catalog-sort" id="catalogSort">
+    <option value="newest">Más nuevo</option>
+    <option value="price_asc">Menor precio</option>
+    <option value="price_desc">Mayor precio</option>
+  </select>
+</div>
+<div class="cat-nav-wrap">
+  <div class="cat-nav" id="catNav">
+    <button class="cat-chip active" data-cat="">TODOS</button>
+    {% for c in categories %}
+    <button class="cat-chip" data-cat="{{ c.name }}">{{ c.name|upper }}</button>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="pub-section-head reveal-up">
+  <div><span class="pub-section-eyebrow">Explora</span><h2>Catálogo completo</h2></div>
+</div>
+<div class="pub-grid" id="pubGrid">
+{% for it in items %}
+  <article class="pub-card"
+    data-ref="{{ it.ref }}" data-category="{{ it.category }}" data-price="{{ it.price }}"
+    data-name="{{ it.name|lower }}" data-updated="{{ it.updated }}">
+    <a href="{{ it.url }}" class="pub-card-imgwrap">
+      {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
+      <span class="pub-cat-chip">{{ it.category }}</span>
+      {% if it.is_new %}<span class="pub-new-chip">★ Nuevo</span>{% endif %}
+      {% if it.type == 'conjunto' and it.savings and it.savings > 0 %}
+      <span class="pub-ribbon">Ahorras {{ it.savings|money }}</span>
+      {% endif %}
+    </a>
+    <div class="pub-card-body">
+      <div class="pub-card-ref-row">
+        <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+        <button type="button" class="fav-btn" data-ref="{{ it.ref }}" aria-label="Guardar en favoritos">♥</button>
+      </div>
+      <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
+      <div class="pub-card-price">{{ it.price|money }}</div>
+      {% if it.sizes %}<div class="pub-sizes">{{ it.sizes|join(' · ') }}</div>{% endif %}
+      {% if it.colors %}
+      <div class="pub-colors">
+        {% for c in it.colors %}<span class="pub-dot" style="background:{{ c.name|colorhex }}" title="{{ c.name }}" data-img="{{ c.image or '' }}"></span>{% endfor %}
+      </div>
+      {% endif %}
+      <div class="pub-card-actions">
+        <a class="pub-btn pub-btn-outline" href="{{ it.url }}">Ver producto</a>
+        <a class="pub-btn pub-btn-solid" href="{{ it.url }}#elegir">Agregar</a>
+      </div>
+    </div>
+  </article>
+{% else %}
+  <div class="pub-empty">Todavía no hay productos publicados en el catálogo.</div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const grid = document.getElementById('pubGrid');
+  const cards = Array.from(grid.querySelectorAll('.pub-card'));
+  const catNav = document.getElementById('catNav');
+  const searchInput = document.getElementById('catalogSearch');
+  const sortSelect = document.getElementById('catalogSort');
+  let activeCat = '';
+  let searchTerm = '';
+
+  function applyFilter(){
+    cards.forEach(c => {
+      const matchesCat = !activeCat || c.dataset.category === activeCat;
+      const matchesSearch = !searchTerm
+        || (c.dataset.name || '').includes(searchTerm)
+        || (c.dataset.ref || '').toLowerCase().includes(searchTerm);
+      c.style.display = (matchesCat && matchesSearch) ? '' : 'none';
+    });
+  }
+
+  function applySort(){
+    if (!sortSelect) return;
+    const mode = sortSelect.value;
+    const sorted = cards.slice().sort((a, b) => {
+      if (mode === 'price_asc') return (parseFloat(a.dataset.price) || 0) - (parseFloat(b.dataset.price) || 0);
+      if (mode === 'price_desc') return (parseFloat(b.dataset.price) || 0) - (parseFloat(a.dataset.price) || 0);
+      // 'newest': fecha de actualización descendente (más nuevo primero)
+      return (b.dataset.updated || '').localeCompare(a.dataset.updated || '');
+    });
+    sorted.forEach(c => grid.appendChild(c));
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value.trim().toLowerCase();
+      applyFilter();
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', applySort);
+  }
+
+  catNav.addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-chip');
+    if (!btn) return;
+    catNav.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    applyFilter();
+  });
+
+  // Si llegamos con ?cat=NombreCategoria en la URL (desde "Explora por
+  // categoría" en el inicio), preseleccionamos ese chip y filtramos de una vez.
+  const initialCat = new URLSearchParams(window.location.search).get('cat');
+  if (initialCat) {
+    const match = Array.from(catNav.querySelectorAll('.cat-chip')).find(b => b.dataset.cat === initialCat);
+    if (match) {
+      catNav.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+      match.classList.add('active');
+      activeCat = initialCat;
+      applyFilter();
+    }
+  }
+
+  // Al hacer clic/tocar un color, mostramos la foto de esa variante directo
+  // en la tarjeta (sin entrar al producto). Funciona igual con mouse o con
+  // dedo en móvil, a diferencia del hover que no existe en pantallas táctiles.
+  cards.forEach(card => {
+    const img = card.querySelector('.pub-card-imgwrap img');
+    const dots = card.querySelectorAll('.pub-dot');
+    if (!img || !dots.length) return;
+    dots.forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!dot.dataset.img) return;
+        img.src = dot.dataset.img;
+        dots.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

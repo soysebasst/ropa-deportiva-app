@@ -1,0 +1,21 @@
+{% extends "base_public.html" %}
+{% block meta_title %}Página no encontrada — {{ brand.brand_name }}{% endblock %}
+{% block content %}
+<div class="notfound-wrap">
+  <div class="notfound-badge">404</div>
+  <h1 class="notfound-title">¡Uy! No encontramos esta página</h1>
+  <p class="notfound-text">El enlace que seguiste no existe o fue movido. Pero tranquilo, tenemos muchas prendas esperándote en el catálogo.</p>
+  <div class="notfound-actions">
+    <a class="pub-btn pub-btn-solid pub-btn-lg" href="{{ url_for('landing_page') }}">Ir al inicio</a>
+    <a class="pub-btn pub-btn-outline pub-btn-lg" href="{{ url_for('public_catalog') }}">Ver catálogo</a>
+  </div>
+  <div class="notfound-art" aria-hidden="true">
+    <svg viewBox="0 0 200 160" class="notfound-svg">
+      <circle cx="100" cy="80" r="70" class="nf-circle"/>
+      <path d="M60 95q40 30 80 0" class="nf-smile"/>
+      <circle cx="75" cy="65" r="7" class="nf-eye"/>
+      <circle cx="125" cy="65" r="7" class="nf-eye"/>
+    </svg>
+  </div>
+</div>
+{% endblock %}

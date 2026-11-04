@@ -1,0 +1,228 @@
+{% extends "base_public.html" %}
+{% block meta_title %}{% if item %}{{ item.ref }} — {{ item.name }} | Mayorista {{ brand.brand_name }}{% else %}Producto no encontrado | {{ brand.brand_name }}{% endif %}{% endblock %}
+
+{% block header_actions %}
+<a class="pub-back-link" href="{{ url_for('mayoristas_catalog') }}">← Lista mayorista</a>
+{% endblock %}
+
+{% block subheader %}
+<div class="wholesale-strip">LISTA MAYORISTA · Pedido mínimo <strong>{{ min_qty }}</strong> unidades</div>
+<div class="pub-breadcrumb">
+  <a href="{{ url_for('mayoristas_catalog') }}">← Volver a la lista mayorista</a>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if not item %}
+<div class="pub-empty pub-empty-page">
+  <h2>Producto no encontrado</h2>
+  <p>Puede que todavía no tenga precio mayorista o ya no esté disponible.</p>
+  <a class="pub-btn pub-btn-solid" href="{{ url_for('mayoristas_catalog') }}">Ver lista mayorista</a>
+</div>
+{% else %}
+<div class="pdp">
+  <div class="pdp-gallery">
+    <div class="pdp-main-image">
+      {% if item.image %}<img id="pdpMainImage" src="{{ item.image }}" alt="{{ item.name }}">
+      <button type="button" class="pdp-zoom-btn" id="pdpZoomBtn" aria-label="Ampliar imagen">🔍</button>
+      {% else %}<div class="pub-placeholder big">SIN IMAGEN</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="pdp-info">
+    <div class="pub-eyebrow">{{ item.category }}</div>
+    <div class="pdp-ref">{{ item.ref }}</div>
+    <h1 class="pdp-title">{{ item.name }}</h1>
+    <div class="pdp-price">{{ item.price|money }}</div>
+
+    {% if item.sizes %}
+    <div class="pdp-block">
+      <div class="pdp-label-row">
+        <span class="pdp-label">Tallas disponibles</span>
+        <button type="button" class="size-guide-btn" id="sizeGuideBtn">📏 Tabla de tallas</button>
+      </div>
+      <div class="pdp-sizes">{% for s in item.sizes %}<span class="size-pill">{{ s }}</span>{% endfor %}</div>
+    </div>
+    {% endif %}
+
+    {% if item.colors %}
+    <div class="pdp-block">
+      <span class="pdp-label">Colores</span>
+      <div class="pdp-colors" id="pdpColors">
+        {% for c in item.colors %}
+        {% if c.image %}
+        <button class="color-swatch" data-color="{{ c.name }}" data-img="{{ c.image }}">
+          <img src="{{ c.image }}">
+          <span class="color-swatch-name">{{ c.name }}</span>
+        </button>
+        {% else %}
+        <button class="color-swatch color-swatch-text" data-color="{{ c.name }}" data-img="">
+          <span class="color-swatch-mini" style="background:{{ c.name|colorhex }}"></span>{{ c.name }}
+        </button>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="pdp-actions">
+      <button class="pub-btn pub-btn-wa pub-btn-lg" id="waConsultBtn">Consultar por WhatsApp</button>
+    </div>
+
+    {% if item.includes %}
+    <div class="pdp-block">
+      <span class="pdp-label">Incluye</span>
+      <div class="pdp-includes">
+        {% for inc in item.includes %}
+        <div class="pdp-include-row">
+          <span class="ref">{{ inc.ref }}</span>
+          <span>{{ (inc.quantity ~ 'x ') if inc.quantity and inc.quantity > 1 else '' }}{{ inc.name }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if related %}
+<section class="pdp-related">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Combina con</span><h2>También te puede interesar</h2></div>
+  </div>
+  <div class="pub-grid pdp-related-grid">
+    {% for it in related %}
+    <article class="pub-card">
+      <a href="{{ it.url }}" class="pub-card-imgwrap">
+        {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
+        <span class="pub-cat-chip">{{ it.category }}</span>
+        {% if it.is_new %}<span class="pub-new-chip">★ Nuevo</span>{% endif %}
+      </a>
+      <div class="pub-card-body">
+        <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+        <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
+        <div class="pub-card-price">{{ it.price|money }}</div>
+        <div class="pub-card-actions">
+          <a class="pub-btn pub-btn-outline" href="{{ it.url }}">Ver detalle</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="pdp-related recent-section" id="recentSection" style="display:none">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Tu historial</span><h2>Visto recientemente</h2></div>
+  </div>
+  <div class="pub-grid pdp-related-grid" id="recentGrid"></div>
+</section>
+
+{% if item.sizes %}
+<div class="size-guide-modal" id="sizeGuideModal" aria-hidden="true">
+  <div class="size-guide-modal-backdrop" id="sizeGuideBackdrop"></div>
+  <div class="size-guide-modal-card">
+    <button type="button" class="size-guide-close" id="sizeGuideClose" aria-label="Cerrar">✕</button>
+    <h3>Tabla de tallas</h3>
+    {% if size_guide %}
+    <div class="size-guide-table-wrap">
+      <table class="size-guide-table">
+        <thead><tr><th>Talla</th><th>Pecho</th><th>Cintura</th><th>Cadera</th><th>Largo</th></tr></thead>
+        <tbody>
+          {% for r in size_guide %}
+          <tr><td>{{ r.talla }}</td><td>{{ r.pecho or '—' }}</td><td>{{ r.cintura or '—' }}</td><td>{{ r.cadera or '—' }}</td><td>{{ r.largo or '—' }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="size-guide-empty">Pronto agregaremos las medidas de cada talla. Mientras tanto, escríbenos por WhatsApp y te ayudamos a elegir.</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if item.image %}
+<div class="pdp-lightbox" id="pdpLightbox" aria-hidden="true">
+  <div class="pdp-lightbox-backdrop" id="pdpLightboxBackdrop"></div>
+  <button type="button" class="pdp-lightbox-close" id="pdpLightboxClose" aria-label="Cerrar">✕</button>
+  <img id="pdpLightboxImg" src="" alt="{{ item.name }}">
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if item %}
+<script id="item-data" type="application/json">{{ item|tojson }}</script>
+<script>
+(function(){
+  const item = JSON.parse(document.getElementById('item-data').textContent);
+  let selectedColor = null;
+
+  if (window.SWRecent) {
+    window.SWRecent.track(item.ref);
+    window.SWRecent.renderInto('recentSection', 'recentGrid', item.ref, 8, '/api/mayoristas/items');
+  }
+
+  const mainImage = document.getElementById('pdpMainImage');
+
+  const sizeGuideBtn = document.getElementById('sizeGuideBtn');
+  const sizeGuideModal = document.getElementById('sizeGuideModal');
+  if (sizeGuideBtn && sizeGuideModal) {
+    const openGuide = () => { sizeGuideModal.classList.add('open'); sizeGuideModal.setAttribute('aria-hidden', 'false'); };
+    const closeGuide = () => { sizeGuideModal.classList.remove('open'); sizeGuideModal.setAttribute('aria-hidden', 'true'); };
+    sizeGuideBtn.addEventListener('click', openGuide);
+    document.getElementById('sizeGuideClose').addEventListener('click', closeGuide);
+    document.getElementById('sizeGuideBackdrop').addEventListener('click', closeGuide);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeGuide(); });
+  }
+
+  const pdpZoomBtn = document.getElementById('pdpZoomBtn');
+  const pdpLightbox = document.getElementById('pdpLightbox');
+  const pdpLightboxImg = document.getElementById('pdpLightboxImg');
+  if (pdpLightbox && pdpLightboxImg && mainImage) {
+    const openLightbox = () => {
+      pdpLightboxImg.src = mainImage.src;
+      pdpLightbox.classList.add('open');
+      pdpLightbox.setAttribute('aria-hidden', 'false');
+    };
+    const closeLightbox = () => {
+      pdpLightbox.classList.remove('open');
+      pdpLightbox.setAttribute('aria-hidden', 'true');
+    };
+    mainImage.style.cursor = 'zoom-in';
+    mainImage.addEventListener('click', openLightbox);
+    if (pdpZoomBtn) pdpZoomBtn.addEventListener('click', openLightbox);
+    document.getElementById('pdpLightboxClose').addEventListener('click', closeLightbox);
+    document.getElementById('pdpLightboxBackdrop').addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+  }
+
+  document.querySelectorAll('.color-swatch').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedColor = btn.dataset.color;
+      if (btn.dataset.img && mainImage) {
+        mainImage.src = btn.dataset.img;
+      }
+    });
+  });
+
+  document.getElementById('waConsultBtn').addEventListener('click', () => {
+    const brandName = (window.BRAND && window.BRAND.name) || 'la tienda';
+    let text = "Hola " + brandName + " 👋\n";
+    text += "Quiero consultar precio mayorista de:\n";
+    text += item.ref + "\n" + item.name + "\n";
+    if (selectedColor) text += "Color: " + selectedColor + "\n";
+    text += "Precio mayorista: " + SWCart.money(item.price) + "\n\n";
+    text += "Quisiera más información (pedido mínimo {{ min_qty }} unidades).";
+    window.open(SWCart.waLink(text), "_blank");
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

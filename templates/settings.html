@@ -91,7 +91,7 @@
     </div>
   </div>
 
-  <div class="form-section" style="border-bottom:0">
+  <div class="form-section">
     <h3>Banner grande (landing)</h3>
     <p class="muted">Se muestra al tope de tu página de inicio (/inicio), detrás del título grande.</p>
     {% if brand.banner_image %}
@@ -103,6 +103,12 @@
       <label>Subtítulo<input name="banner_subtitle" placeholder="Ropa deportiva para tu estilo." value="{{ brand.banner_subtitle }}"></label>
     </div>
     <label>Texto del botón<input name="banner_cta_text" placeholder="Ver catálogo" value="{{ brand.banner_cta_text }}"></label>
+  </div>
+
+  <div class="form-section" style="border-bottom:0">
+    <h3>Google Analytics</h3>
+    <p class="muted">Pega aquí tu Measurement ID de Google Analytics 4 (empieza con "G-") para ver cuánta gente visita tu catálogo, qué páginas ven más y de dónde vienen. Créalo gratis en analytics.google.com → Administrar → Flujos de datos → Web. Déjalo vacío para no activar el seguimiento.</p>
+    <label>Measurement ID<input name="ga_measurement_id" placeholder="G-XXXXXXXXXX" value="{{ brand.ga_measurement_id }}"></label>
   </div>
 
   <div class="form-actions">

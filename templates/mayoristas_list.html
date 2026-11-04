@@ -12,6 +12,12 @@
   LISTA MAYORISTA · Pedido mínimo <strong>{{ min_qty }}</strong> unidades
   {% if wholesale_note %} · {{ wholesale_note }}{% endif %}
 </div>
+<div class="catalog-search-wrap">
+  <div class="catalog-search">
+    <span class="catalog-search-ico">🔎</span>
+    <input type="search" id="catalogSearch" placeholder="Buscar por nombre o referencia..." autocomplete="off">
+  </div>
+</div>
 <div class="cat-nav-wrap">
   <div class="cat-nav" id="catNav">
     <button class="cat-chip active" data-cat="">TODOS</button>
@@ -25,7 +31,7 @@
 {% block content %}
 <div class="pub-grid" id="pubGrid">
 {% for it in items %}
-  <article class="pub-card" data-category="{{ it.category }}">
+  <article class="pub-card" data-category="{{ it.category }}" data-ref="{{ it.ref }}" data-name="{{ it.name|lower }}">
     <a href="{{ it.url }}" class="pub-card-imgwrap">
       {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
       <span class="pub-cat-chip">{{ it.category }}</span>
@@ -56,9 +62,23 @@
   const grid = document.getElementById('pubGrid');
   const cards = Array.from(grid.querySelectorAll('.pub-card'));
   const catNav = document.getElementById('catNav');
+  const searchInput = document.getElementById('catalogSearch');
   let activeCat = '';
+  let searchTerm = '';
   function applyFilter(){
-    cards.forEach(c => { c.style.display = (!activeCat || c.dataset.category === activeCat) ? '' : 'none'; });
+    cards.forEach(c => {
+      const matchesCat = !activeCat || c.dataset.category === activeCat;
+      const matchesSearch = !searchTerm
+        || (c.dataset.name || '').includes(searchTerm)
+        || (c.dataset.ref || '').toLowerCase().includes(searchTerm);
+      c.style.display = (matchesCat && matchesSearch) ? '' : 'none';
+    });
+  }
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value.trim().toLowerCase();
+      applyFilter();
+    });
   }
   catNav.addEventListener('click', (e) => {
     const btn = e.target.closest('.cat-chip');

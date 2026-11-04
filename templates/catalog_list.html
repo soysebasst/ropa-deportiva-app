@@ -6,6 +6,12 @@
 <div class="pub-breadcrumb">
   <a href="{{ url_for('landing_page') }}">← Inicio</a>
 </div>
+<div class="catalog-search-wrap">
+  <div class="catalog-search">
+    <span class="catalog-search-ico">🔎</span>
+    <input type="search" id="catalogSearch" placeholder="Buscar por nombre o referencia..." autocomplete="off">
+  </div>
+</div>
 <div class="cat-nav-wrap">
   <div class="cat-nav" id="catNav">
     <button class="cat-chip active" data-cat="">TODOS</button>
@@ -60,10 +66,25 @@
   const grid = document.getElementById('pubGrid');
   const cards = Array.from(grid.querySelectorAll('.pub-card'));
   const catNav = document.getElementById('catNav');
+  const searchInput = document.getElementById('catalogSearch');
   let activeCat = '';
+  let searchTerm = '';
 
   function applyFilter(){
-    cards.forEach(c => { c.style.display = (!activeCat || c.dataset.category === activeCat) ? '' : 'none'; });
+    cards.forEach(c => {
+      const matchesCat = !activeCat || c.dataset.category === activeCat;
+      const matchesSearch = !searchTerm
+        || (c.dataset.name || '').includes(searchTerm)
+        || (c.dataset.ref || '').toLowerCase().includes(searchTerm);
+      c.style.display = (matchesCat && matchesSearch) ? '' : 'none';
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value.trim().toLowerCase();
+      applyFilter();
+    });
   }
 
   catNav.addEventListener('click', (e) => {

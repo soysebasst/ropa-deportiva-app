@@ -33,6 +33,16 @@
 d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.classList.remove('js-motion');},2500);}catch(e){}})(document.documentElement);
 </script>
 <meta name="theme-color" content="#06060a">
+
+{% if brand.ga_measurement_id %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ brand.ga_measurement_id }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ brand.ga_measurement_id }}');
+</script>
+{% endif %}
 {% block extra_head %}{% endblock %}
 </head>
 <body class="pub-body">

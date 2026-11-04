@@ -153,6 +153,8 @@ DEFAULT_SETTINGS = {
     # Catálogo mayorista (/mayoristas)
     "wholesale_min_qty": "6",
     "wholesale_note": "",
+    # Google Analytics (GA4) — opcional, se activa solo si se llena el Measurement ID
+    "ga_measurement_id": "",
 }
 
 
@@ -252,6 +254,15 @@ def init_db():
             notes TEXT DEFAULT '',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS size_guide_rows (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            talla TEXT NOT NULL,
+            pecho TEXT DEFAULT '',
+            cintura TEXT DEFAULT '',
+            cadera TEXT DEFAULT '',
+            largo TEXT DEFAULT '',
+            sort_order INTEGER DEFAULT 0
+        );
         """
     )
 
@@ -315,6 +326,17 @@ def get_categories(conn, exclude_conjuntos=False):
 def distinct_colors(conn):
     rows = conn.execute("SELECT DISTINCT color FROM colors WHERE color IS NOT NULL AND TRIM(color) <> '' ORDER BY color").fetchall()
     return [r["color"] for r in rows]
+
+
+def get_size_guide(conn):
+    """Filas de la tabla de tallas (medidas estándar), en el orden en que
+    se agregaron. Se muestran en el catálogo público solo si hay al menos
+    una fila — mientras esté vacía, el botón "Tabla de tallas" avisa que
+    todavía no se ha cargado desde el panel."""
+    rows = conn.execute(
+        "SELECT id, talla, pecho, cintura, cadera, largo FROM size_guide_rows ORDER BY sort_order, id"
+    ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def distinct_sizes(conn):
@@ -1126,6 +1148,60 @@ def category_delete(cid):
 
 
 # ---------------------------------------------------------------------------
+# Tabla de tallas (medidas estándar) — la llena el administrador una vez y
+# se muestra en el botón "Tabla de tallas" de cada producto del catálogo
+# público y del catálogo mayorista.
+# ---------------------------------------------------------------------------
+@app.route("/tallas")
+def size_guide_page():
+    conn = db()
+    try:
+        rows = get_size_guide(conn)
+    finally:
+        conn.close()
+    return render_template("size_guide.html", rows=rows)
+
+
+@app.post("/tallas/nueva")
+def size_guide_new():
+    talla = request.form.get("talla", "").strip()
+    conn = db()
+    try:
+        if not talla:
+            flash("Escribe el nombre de la talla (ej. S, M, L).", "error")
+        else:
+            max_order = conn.execute("SELECT COALESCE(MAX(sort_order),0) FROM size_guide_rows").fetchone()[0]
+            conn.execute(
+                "INSERT INTO size_guide_rows(talla,pecho,cintura,cadera,largo,sort_order) VALUES (?,?,?,?,?,?)",
+                (
+                    talla,
+                    request.form.get("pecho", "").strip(),
+                    request.form.get("cintura", "").strip(),
+                    request.form.get("cadera", "").strip(),
+                    request.form.get("largo", "").strip(),
+                    max_order + 1,
+                ),
+            )
+            conn.commit()
+            flash("Fila agregada a la tabla de tallas.", "ok")
+    finally:
+        conn.close()
+    return redirect(url_for("size_guide_page"))
+
+
+@app.post("/tallas/<int:rid>/eliminar")
+def size_guide_delete(rid):
+    conn = db()
+    try:
+        conn.execute("DELETE FROM size_guide_rows WHERE id=?", (rid,))
+        conn.commit()
+        flash("Fila eliminada.", "ok")
+    finally:
+        conn.close()
+    return redirect(url_for("size_guide_page"))
+
+
+# ---------------------------------------------------------------------------
 # Configuración de marca
 # ---------------------------------------------------------------------------
 @app.route("/configuracion", methods=["GET", "POST"])
@@ -1150,6 +1226,7 @@ def settings_page():
                 "location_text", "shipping_text", "warranty_text",
                 "promo_title", "promo_text", "promo_cta_text",
                 "wholesale_min_qty", "wholesale_note",
+                "ga_measurement_id",
             ):
                 val = request.form.get(key, "").strip()
                 conn.execute(
@@ -1493,11 +1570,12 @@ def catalog_product(reference):
     conn = db()
     try:
         items = public_catalog_items(conn)
+        size_guide = get_size_guide(conn)
     finally:
         conn.close()
     ref_upper = reference.strip().upper()
     item = next((it for it in items if it["ref"].upper() == ref_upper), None)
-    return render_template("catalog_product.html", item=item, items=items)
+    return render_template("catalog_product.html", item=item, items=items, size_guide=size_guide)
 
 
 @app.route("/catalogo/pedido")
@@ -1616,6 +1694,7 @@ def mayorista_product(reference):
     try:
         items = wholesale_catalog_items(conn)
         settings_ = get_settings(conn)
+        size_guide = get_size_guide(conn)
     finally:
         conn.close()
     ref_upper = reference.strip().upper()
@@ -1623,6 +1702,7 @@ def mayorista_product(reference):
     return render_template(
         "mayoristas_product.html", item=item, items=items,
         min_qty=settings_.get("wholesale_min_qty") or "6",
+        size_guide=size_guide,
     )
 
 

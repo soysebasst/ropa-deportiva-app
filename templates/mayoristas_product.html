@@ -24,6 +24,7 @@
   <div class="pdp-gallery">
     <div class="pdp-main-image">
       {% if item.image %}<img id="pdpMainImage" src="{{ item.image }}" alt="{{ item.name }}">
+      <button type="button" class="pdp-zoom-btn" id="pdpZoomBtn" aria-label="Ampliar imagen">🔍</button>
       {% else %}<div class="pub-placeholder big">SIN IMAGEN</div>{% endif %}
     </div>
   </div>
@@ -36,7 +37,10 @@
 
     {% if item.sizes %}
     <div class="pdp-block">
-      <span class="pdp-label">Tallas disponibles</span>
+      <div class="pdp-label-row">
+        <span class="pdp-label">Tallas disponibles</span>
+        <button type="button" class="size-guide-btn" id="sizeGuideBtn">📏 Tabla de tallas</button>
+      </div>
       <div class="pdp-sizes">{% for s in item.sizes %}<span class="size-pill">{{ s }}</span>{% endfor %}</div>
     </div>
     {% endif %}
@@ -80,6 +84,39 @@
     {% endif %}
   </div>
 </div>
+
+{% if item.sizes %}
+<div class="size-guide-modal" id="sizeGuideModal" aria-hidden="true">
+  <div class="size-guide-modal-backdrop" id="sizeGuideBackdrop"></div>
+  <div class="size-guide-modal-card">
+    <button type="button" class="size-guide-close" id="sizeGuideClose" aria-label="Cerrar">✕</button>
+    <h3>Tabla de tallas</h3>
+    {% if size_guide %}
+    <div class="size-guide-table-wrap">
+      <table class="size-guide-table">
+        <thead><tr><th>Talla</th><th>Pecho</th><th>Cintura</th><th>Cadera</th><th>Largo</th></tr></thead>
+        <tbody>
+          {% for r in size_guide %}
+          <tr><td>{{ r.talla }}</td><td>{{ r.pecho or '—' }}</td><td>{{ r.cintura or '—' }}</td><td>{{ r.cadera or '—' }}</td><td>{{ r.largo or '—' }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="size-guide-empty">Pronto agregaremos las medidas de cada talla. Mientras tanto, escríbenos por WhatsApp y te ayudamos a elegir.</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if item.image %}
+<div class="pdp-lightbox" id="pdpLightbox" aria-hidden="true">
+  <div class="pdp-lightbox-backdrop" id="pdpLightboxBackdrop"></div>
+  <button type="button" class="pdp-lightbox-close" id="pdpLightboxClose" aria-label="Cerrar">✕</button>
+  <img id="pdpLightboxImg" src="" alt="{{ item.name }}">
+</div>
+{% endif %}
+
 {% endif %}
 {% endblock %}
 
@@ -91,6 +128,38 @@
   const item = JSON.parse(document.getElementById('item-data').textContent);
   let selectedColor = null;
   const mainImage = document.getElementById('pdpMainImage');
+
+  const sizeGuideBtn = document.getElementById('sizeGuideBtn');
+  const sizeGuideModal = document.getElementById('sizeGuideModal');
+  if (sizeGuideBtn && sizeGuideModal) {
+    const openGuide = () => { sizeGuideModal.classList.add('open'); sizeGuideModal.setAttribute('aria-hidden', 'false'); };
+    const closeGuide = () => { sizeGuideModal.classList.remove('open'); sizeGuideModal.setAttribute('aria-hidden', 'true'); };
+    sizeGuideBtn.addEventListener('click', openGuide);
+    document.getElementById('sizeGuideClose').addEventListener('click', closeGuide);
+    document.getElementById('sizeGuideBackdrop').addEventListener('click', closeGuide);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeGuide(); });
+  }
+
+  const pdpZoomBtn = document.getElementById('pdpZoomBtn');
+  const pdpLightbox = document.getElementById('pdpLightbox');
+  const pdpLightboxImg = document.getElementById('pdpLightboxImg');
+  if (pdpLightbox && pdpLightboxImg && mainImage) {
+    const openLightbox = () => {
+      pdpLightboxImg.src = mainImage.src;
+      pdpLightbox.classList.add('open');
+      pdpLightbox.setAttribute('aria-hidden', 'false');
+    };
+    const closeLightbox = () => {
+      pdpLightbox.classList.remove('open');
+      pdpLightbox.setAttribute('aria-hidden', 'true');
+    };
+    mainImage.style.cursor = 'zoom-in';
+    mainImage.addEventListener('click', openLightbox);
+    if (pdpZoomBtn) pdpZoomBtn.addEventListener('click', openLightbox);
+    document.getElementById('pdpLightboxClose').addEventListener('click', closeLightbox);
+    document.getElementById('pdpLightboxBackdrop').addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+  }
 
   document.querySelectorAll('.color-swatch').forEach(btn => {
     btn.addEventListener('click', () => {

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block pagetitle %}Tabla de tallas{% endblock %}
+{% block eyebrow %}CATÁLOGO{% endblock %}
+{% block heading %}Tabla de tallas{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div><div class="section-kicker">CATÁLOGO</div><h2>Medidas estándar</h2><p>Esta tabla aparece en el botón "Tabla de tallas" de cada producto del catálogo público y del catálogo mayorista. Agrega una fila por talla con las medidas en centímetros (o la unidad que prefieras, solo escríbela en cada casilla).</p></div>
+</div>
+
+<div class="card-form" style="max-width:720px;margin-bottom:28px">
+  <h3 style="margin-top:0">Agregar fila</h3>
+  <form method="post" action="{{ url_for('size_guide_new') }}" class="row" style="grid-template-columns:repeat(5,1fr) auto;align-items:end;gap:10px">
+    <label>Talla<input name="talla" placeholder="S" required></label>
+    <label>Pecho<input name="pecho" placeholder="90 cm"></label>
+    <label>Cintura<input name="cintura" placeholder="74 cm"></label>
+    <label>Cadera<input name="cadera" placeholder="96 cm"></label>
+    <label>Largo<input name="largo" placeholder="68 cm"></label>
+    <button class="primary" type="submit">+ Agregar</button>
+  </form>
+</div>
+
+{% if rows %}
+<div class="category-table">
+  <div class="category-row category-row-head" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr auto">
+    <span>Talla</span><span>Pecho</span><span>Cintura</span><span>Cadera</span><span>Largo</span><span></span>
+  </div>
+  {% for r in rows %}
+  <div class="category-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr auto">
+    <span class="cat-name">{{ r.talla }}</span>
+    <span>{{ r.pecho or '—' }}</span>
+    <span>{{ r.cintura or '—' }}</span>
+    <span>{{ r.cadera or '—' }}</span>
+    <span>{{ r.largo or '—' }}</span>
+    <span>
+      <form method="post" action="{{ url_for('size_guide_delete', rid=r.id) }}" onsubmit="return confirm('¿Eliminar la fila {{ r.talla }}?')">
+        <button class="danger-link small" type="submit">Eliminar</button>
+      </form>
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty" style="max-width:720px">Todavía no has agregado filas. Mientras esté vacía, los clientes verán un aviso de "próximamente" en vez de la tabla.</div>
+{% endif %}
+{% endblock %}

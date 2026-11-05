@@ -1,0 +1,210 @@
+{% extends "base_public.html" %}
+{% block meta_title %}{{ brand.brand_name }} — {{ brand.tagline }}{% endblock %}
+{% block og_title %}{{ brand.brand_name }} — {{ brand.tagline }}{% endblock %}
+
+{% block subheader %}
+<div class="hero-land">
+  {% if brand.banner_image %}<div class="home-banner-bg" style="background-image:url('{{ url_for('uploaded_file', filename=brand.banner_image) }}')"></div>{% endif %}
+  <div class="hero-land-inner">
+    <span class="home-banner-eyebrow">{{ brand.brand_name|upper }}</span>
+    {% if brand.banner_title %}
+    <h1 class="home-banner-title">{{ brand.banner_title }}</h1>
+    {% else %}
+    <h1 class="home-banner-title">CORTA EL<br><mark>LÍMITE.</mark></h1>
+    {% endif %}
+    <p class="home-banner-subtitle">{{ brand.banner_subtitle or ('Ropa deportiva para superar tus límites.') }}</p>
+    <div class="hero-land-ctas">
+      <a class="pub-btn pub-btn-solid pub-btn-lg" href="{{ url_for('public_catalog') }}">{{ brand.banner_cta_text or 'EXPLORAR COLECCIÓN' }}</a>
+      <a class="pub-btn pub-btn-outline-light pub-btn-lg" href="#categorias">Explorar categorías</a>
+    </div>
+  </div>
+  {% if brand.hero_photo %}
+  <img class="hero-land-photo" src="{{ url_for('uploaded_file', filename=brand.hero_photo) }}" alt="{{ brand.brand_name }}">
+  {% else %}
+  <div class="hero-land-graphic" aria-hidden="true">
+    <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#2541ff" stop-opacity=".55"/>
+          <stop offset="100%" stop-color="#2541ff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <rect x="40" y="0" width="420" height="500" fill="url(#heroGrad)" transform="skewX(-14)"/>
+      <text x="200" y="300" text-anchor="middle" font-family="Archivo, Impact, sans-serif" font-weight="900" font-style="italic" font-size="260" fill="rgba(255,255,255,.08)">ST</text>
+      <g stroke="#2541ff" stroke-width="3" opacity=".6">
+        <line x1="60" y1="120" x2="140" y2="90"/>
+        <line x1="80" y1="170" x2="160" y2="140"/>
+        <line x1="100" y1="220" x2="180" y2="190"/>
+      </g>
+    </svg>
+  </div>
+  {% endif %}
+</div>
+<div class="hero-pillars-wrap">
+  <div class="hero-pillars">
+    <span class="hero-pillar"><span class="hero-pillar-ico">⚡</span>Rendimiento</span>
+    <span class="hero-pillar"><span class="hero-pillar-ico">◆</span>Comodidad</span>
+    <span class="hero-pillar"><span class="hero-pillar-ico">✓</span>Confianza</span>
+    <span class="hero-pillar"><span class="hero-pillar-ico">▲</span>Disciplina</span>
+  </div>
+</div>
+<div class="pub-float-card reveal-up">
+  <div class="pub-float-card-inner">
+    <span class="pub-float-card-icon">{{ (brand.brand_name or 'S')[:1]|upper }}</span>
+    <span class="pub-float-card-text">{{ brand.tagline or 'Ropa deportiva para tu estilo.' }}<br><strong>Escríbenos y arma tu pedido hoy mismo.</strong></span>
+  </div>
+  {% if brand.whatsapp_number %}<a class="pub-btn pub-btn-wa" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
+</div>
+{% if brand.statement_text %}
+<div class="pub-marquee">
+  <div class="pub-marquee-track">
+    {% for i in range(6) %}<span class="pub-marquee-item">{{ brand.statement_text }}</span>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<section id="categorias" class="land-section land-section-light">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Encuentra lo tuyo</span><h2>Explora por categoría</h2></div>
+    <a class="pub-view-all" href="{{ url_for('public_catalog') }}">Ver todo →</a>
+  </div>
+  <div class="cat-grid" id="catGrid">
+    {% for c in categories %}
+    <a class="cat-tile" href="{{ c.url }}">
+      {% if c.image %}<img src="{{ c.image }}" alt="{{ c.name }}" loading="lazy">{% else %}<div class="pub-placeholder big">{{ c.name|upper }}</div>{% endif %}
+      <div class="cat-tile-overlay"></div>
+      <div class="cat-tile-body">
+        <span class="cat-tile-count">{{ c.count }} ítem{{ 's' if c.count != 1 else '' }}</span>
+        <span class="cat-tile-name">{{ c.name|upper }}</span>
+      </div>
+      <span class="cat-tile-arrow">↗</span>
+    </a>
+    {% else %}
+    <div class="pub-empty">Todavía no hay categorías con productos publicados.</div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="garantias" class="land-section-light land-benefits-strip">
+  <div class="benefits-row">
+    <div class="benefit-item reveal-up">
+      <span class="benefit-ico">🚚</span>
+      <div><strong>Envíos</strong><p>{{ brand.shipping_text }}</p></div>
+    </div>
+    <div class="benefit-item reveal-up">
+      <span class="benefit-ico">🔄</span>
+      <div><strong>Cambios y garantía</strong><p>{{ brand.warranty_text }}</p></div>
+    </div>
+    {% if brand.whatsapp_number %}
+    <div class="benefit-item reveal-up">
+      <span class="benefit-ico">💬</span>
+      <div><strong>Atención por WhatsApp</strong><p>Resolvemos tus dudas y confirmamos pedidos directo por chat.</p></div>
+    </div>
+    {% endif %}
+    <div class="benefit-item reveal-up">
+      <span class="benefit-ico">📍</span>
+      <div><strong>Ubicación</strong><p>{{ brand.location_text }}</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="land-section-flush land-blocks">
+  <div class="land-blocks-row">
+    <div class="land-block land-block-dark reveal-up">
+      <span class="land-block-eyebrow">{{ brand.brand_name|upper }}</span>
+      <h3>Más que ropa deportiva,<br>somos un estilo de vida.</h3>
+      <a class="pub-btn pub-btn-outline-light" href="{{ url_for('public_catalog') }}">Conoce más →</a>
+    </div>
+    <div class="land-block land-block-blue reveal-up">
+      <span class="land-block-eyebrow">¿Quieres emprender?</span>
+      <h3>Trabaja con nosotros como mayorista y lleva tu negocio al siguiente nivel.</h3>
+      <a class="pub-btn pub-btn-solid-light" href="{{ url_for('mayoristas_catalog') }}?info=1">Solicitar información →</a>
+    </div>
+    <div class="land-block land-block-dark reveal-up">
+      <span class="land-block-eyebrow">Síguenos</span>
+      <h3>en nuestras redes</h3>
+      <div class="pub-social-row">
+        {% if brand.instagram_url %}<a class="pub-social-btn" href="{{ brand.instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153.555.556.899 1.113 1.153 1.772.248.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122s-.01 3.056-.06 4.122c-.05 1.065-.217 1.79-.465 2.428-.254.66-.598 1.216-1.153 1.772-.556.555-1.113.899-1.772 1.153-.637.248-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06s-3.056-.01-4.122-.06c-1.065-.05-1.79-.217-2.428-.465-.66-.254-1.216-.598-1.772-1.153-.555-.556-.899-1.113-1.153-1.772-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12s.01-3.056.06-4.122c.05-1.065.217-1.79.465-2.428.254-.66.598-1.216 1.153-1.772.556-.555 1.113-.899 1.772-1.153.637-.248 1.363-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 1.802c-2.67 0-2.986.01-4.04.058-.976.045-1.505.207-1.858.344-.467.182-.8.399-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.858-.048 1.054-.058 1.37-.058 4.04s.01 2.986.058 4.04c.045.976.207 1.505.344 1.858.182.467.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.858.344 1.054.048 1.37.058 4.04.058s2.986-.01 4.04-.058c.976-.045 1.505-.207 1.858-.344.467-.182.8-.399 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.858.048-1.054.058-1.37.058-4.04s-.01-2.986-.058-4.04c-.045-.976-.207-1.505-.344-1.858-.182-.467-.399-.8-.748-1.15-.35-.35-.683-.566-1.15-.748-.353-.137-.882-.3-1.858-.344C14.986 3.812 14.67 3.802 12 3.802zm0 3.064A5.134 5.134 0 1 1 6.866 12 5.134 5.134 0 0 1 12 6.866zm0 1.802A3.332 3.332 0 1 0 15.332 12 3.332 3.332 0 0 0 12 8.668zm5.338-3.532a1.2 1.2 0 1 1-1.2 1.2 1.2 1.2 0 0 1 1.2-1.2z"/></svg></a>{% endif %}
+        {% if brand.facebook_url %}<a class="pub-social-btn" href="{{ brand.facebook_url }}" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 9H15.5V6H13.5C11.57 6 10 7.57 10 9.5V11H8V14H10V20H13V14H15.2L15.7 11H13V9.7C13 9.3 13.3 9 13.5 9Z"/></svg></a>{% endif %}
+        {% if brand.whatsapp_number %}<a class="pub-social-btn" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2zm0 1.67c2.21 0 4.29.86 5.85 2.42a8.23 8.23 0 0 1 2.42 5.85c0 4.56-3.71 8.27-8.27 8.27-1.48 0-2.93-.4-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.4c0-4.56 3.71-8.28 8.24-8.28zm-4.52 4.3c-.15 0-.4.06-.57.25-.18.2-.68.67-.68 1.62s.7 1.88.8 2.01c.1.13 1.32 2.12 3.29 2.93 1.63.67 2 .6 2.35.57.36-.03 1.16-.47 1.33-.93.16-.46.16-.85.11-.93-.05-.08-.19-.13-.4-.23-.2-.1-1.16-.57-1.34-.64-.18-.07-.31-.1-.44.1-.13.2-.5.64-.62.78-.12.13-.24.15-.44.05-.6-.24-1.14-.56-1.6-.95-.47-.4-.9-.9-1.23-1.37-.13-.18-.03-.28.08-.4.1-.12.4-.46.5-.62.1-.16.05-.3-.01-.4-.06-.1-.5-1.22-.69-1.68-.14-.34-.29-.33-.42-.33z"/></svg></a>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="land-section land-section-light recent-section" id="recentSection" style="display:none">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Tu historial</span><h2>Visto recientemente</h2></div>
+  </div>
+  <div class="pub-grid" id="recentGrid"></div>
+</section>
+
+{% if trending %}
+<section id="tendencia" class="land-section land-section-light">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Lo nuevo</span><h2>En tendencia</h2></div>
+    <a class="pub-view-all" href="{{ url_for('public_catalog') }}">Ver todo →</a>
+  </div>
+  <div class="pub-grid" id="trendGrid">
+    {% for it in trending %}
+    <article class="pub-card" data-category="{{ it.category }}">
+      <a href="{{ it.url }}" class="pub-card-imgwrap">
+        {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
+        <span class="pub-cat-chip">{{ it.category }}</span>
+        {% if it.is_new %}<span class="pub-new-chip">★ Nuevo</span>{% endif %}
+        {% if it.type == 'conjunto' and it.savings and it.savings > 0 %}
+        <span class="pub-ribbon">Ahorras {{ it.savings|money }}</span>
+        {% endif %}
+      </a>
+      <div class="pub-card-body">
+        <div class="pub-card-ref-row">
+          <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+          <button type="button" class="fav-btn" data-ref="{{ it.ref }}" aria-label="Guardar en favoritos">♥</button>
+        </div>
+        <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
+        <div class="pub-card-price">{{ it.price|money }}</div>
+        {% if it.colors %}
+        <div class="pub-colors">
+          {% for c in it.colors %}<span class="pub-dot" style="background:{{ c.name|colorhex }}" title="{{ c.name }}"></span>{% endfor %}
+        </div>
+        {% endif %}
+        <div class="pub-card-actions">
+          <a class="pub-btn pub-btn-outline" href="{{ it.url }}">Ver producto</a>
+          <a class="pub-btn pub-btn-solid" href="{{ it.url }}#elegir">Agregar</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section id="promocion" class="land-section land-section-flush">
+  <div class="pub-promo reveal-up">
+    {% if promo_image %}<img class="pub-promo-bg" src="{{ promo_image }}" alt="">{% endif %}
+    <div class="pub-promo-overlay"></div>
+    <div class="pub-promo-body">
+      <span class="pub-section-eyebrow light">Promoción</span>
+      <h2 class="pub-promo-title">{{ brand.promo_title or 'Promoción activa' }}</h2>
+      <p class="pub-promo-text">{{ brand.promo_text }}</p>
+      {% if brand.whatsapp_number %}
+      <a class="pub-btn pub-btn-solid pub-btn-lg" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}?text={{ ('Hola ' ~ brand.brand_name ~ ', quiero saber mas de la promocion.')|urlencode }}" target="_blank" rel="noopener">{{ brand.promo_cta_text or 'Ver promoción' }}</a>
+      {% else %}
+      <a class="pub-btn pub-btn-solid pub-btn-lg" href="{{ url_for('public_catalog') }}">{{ brand.promo_cta_text or 'Ver promoción' }}</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  if (window.SWRecent) window.SWRecent.renderInto('recentSection', 'recentGrid', null, 8);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base_public.html" %}
+{% block meta_title %}Lista mayorista | {{ brand.brand_name }}{% endblock %}
+{% block og_title %}Lista mayorista | {{ brand.brand_name }}{% endblock %}
+{% block meta_description %}Precios al por mayor de {{ brand.brand_name }}.{% endblock %}
+
+{% block header_actions %}
+<a class="pub-back-link" href="{{ url_for('public_catalog') }}">← Volver a la tienda</a>
+{% endblock %}
+
+{% block subheader %}
+<div class="wholesale-strip">
+  LISTA MAYORISTA · Pedido mínimo <strong>{{ min_qty }}</strong> unidades
+  {% if wholesale_note %} · {{ wholesale_note }}{% endif %}
+  <button type="button" class="wholesale-info-link" id="wholesaleInfoBtn">ℹ️ ¿Cómo ser mayorista?</button>
+</div>
+<div class="catalog-search-wrap">
+  <div class="catalog-search">
+    <span class="catalog-search-ico">🔎</span>
+    <input type="search" id="catalogSearch" placeholder="Buscar por nombre o referencia..." autocomplete="off">
+  </div>
+  <select class="catalog-sort" id="catalogSort">
+    <option value="">Orden por defecto</option>
+    <option value="price_asc">Menor precio</option>
+    <option value="price_desc">Mayor precio</option>
+  </select>
+</div>
+<div class="cat-nav-wrap">
+  <div class="cat-nav" id="catNav">
+    <button class="cat-chip active" data-cat="">TODOS</button>
+    {% for c in categories %}
+    <button class="cat-chip" data-cat="{{ c.name }}">{{ c.name|upper }}</button>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="pub-grid" id="pubGrid">
+{% for it in items %}
+  <article class="pub-card" data-category="{{ it.category }}" data-ref="{{ it.ref }}" data-name="{{ it.name|lower }}" data-price="{{ it.price }}">
+    <a href="{{ it.url }}" class="pub-card-imgwrap">
+      {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
+      <span class="pub-cat-chip">{{ it.category }}</span>
+      {% if it.is_new %}<span class="pub-new-chip">★ Nuevo</span>{% endif %}
+    </a>
+    <div class="pub-card-body">
+      <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
+      <a href="{{ it.url }}" class="pub-card-name">{{ it.name }}</a>
+      <div class="pub-card-price">{{ it.price|money }}</div>
+      {% if it.colors %}
+      <div class="pub-colors">
+        {% for c in it.colors %}<span class="pub-dot" style="background:{{ c.name|colorhex }}" title="{{ c.name }}" data-img="{{ c.image or '' }}"></span>{% endfor %}
+      </div>
+      {% endif %}
+      <div class="pub-card-actions">
+        <a class="pub-btn pub-btn-outline pub-btn-block" href="{{ it.url }}">Ver detalle</a>
+      </div>
+    </div>
+  </article>
+{% else %}
+  <div class="pub-empty">Todavía no hay productos con precio mayorista definido.</div>
+{% endfor %}
+</div>
+
+<div class="wholesale-modal" id="wholesaleModal" aria-hidden="true">
+  <div class="wholesale-modal-backdrop" id="wholesaleModalBackdrop"></div>
+  <div class="wholesale-modal-card">
+    <button type="button" class="wholesale-modal-close" id="wholesaleModalClose" aria-label="Cerrar">✕</button>
+    <span class="wholesale-modal-eyebrow">¿Quieres emprender?</span>
+    <h3>Trabaja con nosotros como mayorista</h3>
+    <div class="wholesale-modal-step">
+      <span class="wholesale-modal-step-num">1</span>
+      <p>Haz tu <strong>primera compra desde {{ min_qty }} unidades</strong> y quedas registrado(a) como mayorista. Después de esa primera compra puedes pedir la cantidad que quieras, sin mínimo.</p>
+    </div>
+    <div class="wholesale-modal-step">
+      <span class="wholesale-modal-step-num">2</span>
+      <p>Como mayorista recibes un <strong>catálogo de precios</strong> y acceso a una <strong>carpeta con todas las fotos de los productos por separado</strong>, listas para compartir en tus redes — o te las enviamos por WhatsApp si prefieres.</p>
+    </div>
+    <div class="wholesale-modal-step">
+      <span class="wholesale-modal-step-num">3</span>
+      <p>También te agregamos a un <strong>grupo de WhatsApp</strong> donde avisamos de nuevas referencias, tallas y promociones.</p>
+    </div>
+    {% if wholesale_note %}<p class="wholesale-modal-note">{{ wholesale_note }}</p>{% endif %}
+    {% if brand.whatsapp_number %}
+    <a class="pub-btn pub-btn-wa pub-btn-lg" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}?text={{ ('Hola, quiero ser mayorista de ' ~ brand.brand_name ~ '. ¿Me cuentan cómo empezar?')|urlencode }}" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+    {% endif %}
+    <button type="button" class="wholesale-modal-dismiss" id="wholesaleModalDismiss">Ver catálogo mayorista</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const grid = document.getElementById('pubGrid');
+  const cards = Array.from(grid.querySelectorAll('.pub-card'));
+  const catNav = document.getElementById('catNav');
+  const searchInput = document.getElementById('catalogSearch');
+  const sortSelect = document.getElementById('catalogSort');
+  let activeCat = '';
+  let searchTerm = '';
+  function applyFilter(){
+    cards.forEach(c => {
+      const matchesCat = !activeCat || c.dataset.category === activeCat;
+      const matchesSearch = !searchTerm
+        || (c.dataset.name || '').includes(searchTerm)
+        || (c.dataset.ref || '').toLowerCase().includes(searchTerm);
+      c.style.display = (matchesCat && matchesSearch) ? '' : 'none';
+    });
+  }
+  function applySort(){
+    if (!sortSelect || !sortSelect.value) return;
+    const mode = sortSelect.value;
+    const sorted = cards.slice().sort((a, b) => {
+      if (mode === 'price_asc') return (parseFloat(a.dataset.price) || 0) - (parseFloat(b.dataset.price) || 0);
+      if (mode === 'price_desc') return (parseFloat(b.dataset.price) || 0) - (parseFloat(a.dataset.price) || 0);
+      return 0;
+    });
+    sorted.forEach(c => grid.appendChild(c));
+  }
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value.trim().toLowerCase();
+      applyFilter();
+    });
+  }
+  if (sortSelect) {
+    sortSelect.addEventListener('change', applySort);
+  }
+  catNav.addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-chip');
+    if (!btn) return;
+    catNav.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    applyFilter();
+  });
+
+  cards.forEach(card => {
+    const img = card.querySelector('.pub-card-imgwrap img');
+    const dots = card.querySelectorAll('.pub-dot');
+    if (!img || !dots.length) return;
+    dots.forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!dot.dataset.img) return;
+        img.src = dot.dataset.img;
+        dots.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+      });
+    });
+  });
+
+  // Cuadro "¿Cómo ser mayorista?": se abre solo si llegas con ?info=1 (desde el
+  // botón de llamado a la acción) o la primera vez que alguien visita esta
+  // página; después queda disponible desde el enlace "¿Cómo ser mayorista?".
+  const modal = document.getElementById('wholesaleModal');
+  if (modal) {
+    const SEEN_KEY = 'sportswearst_mayorista_info_visto';
+    const openModal = () => { modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); };
+    const closeModal = () => { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); };
+    document.getElementById('wholesaleModalClose').addEventListener('click', closeModal);
+    document.getElementById('wholesaleModalBackdrop').addEventListener('click', closeModal);
+    document.getElementById('wholesaleModalDismiss').addEventListener('click', closeModal);
+    const infoBtn = document.getElementById('wholesaleInfoBtn');
+    if (infoBtn) infoBtn.addEventListener('click', openModal);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    const cameFromCta = new URLSearchParams(window.location.search).get('info') === '1';
+    let alreadySeen = false;
+    try { alreadySeen = !!localStorage.getItem(SEEN_KEY); } catch (e) { /* no disponible */ }
+    if (cameFromCta || !alreadySeen) {
+      openModal();
+      try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) { /* no disponible */ }
+    }
+  }
+})();
+</script>
+{% endblock %}

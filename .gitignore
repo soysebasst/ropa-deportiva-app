@@ -15,3 +15,11 @@ __pycache__/
 
 # Variables de entorno locales, si algún día usas un archivo .env
 .env
+
+# Material que vive junto al proyecto pero no es parte del código
+# (assets de marca y el catálogo reconstruido con fotos/BD reales)
+/marca_nueva/
+/catalogo_reconstruido/
+
+# Copias sueltas de archivos entregados por Claude en el chat
+/Claude outputs/

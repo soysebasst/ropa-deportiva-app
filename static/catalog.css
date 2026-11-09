@@ -186,7 +186,7 @@ html{scroll-behavior:smooth}
 /* ---------------- tarjeta flotante sobre el banner ---------------- */
 .pub-float-card{
   position:relative; z-index:3; max-width:1240px; margin:-26px auto 0; padding:0 20px;
-  display:flex; justify-content:center;
+  display:flex; justify-content:center; align-items:center; gap:14px; flex-wrap:wrap;
 }
 .pub-float-card-inner{
   background:var(--surface); border-radius:var(--radius-lg); box-shadow:0 20px 44px rgba(10,10,15,.22);
@@ -199,7 +199,12 @@ html{scroll-behavior:smooth}
 }
 .pub-float-card-text{font-size:12.5px; color:var(--fg); font-weight:600; line-height:1.4}
 .pub-float-card-text strong{color:var(--blue)}
-@media(max-width:600px){.pub-float-card{margin-top:-18px}.pub-float-card-inner{padding:13px 16px; gap:10px}.pub-float-card-text{font-size:11.5px}}
+@media(max-width:600px){
+  .pub-float-card{margin-top:14px; flex-direction:column}
+  .pub-float-card-inner{padding:13px 16px; gap:10px; max-width:none; width:100%}
+  .pub-float-card-text{font-size:11.5px}
+  .pub-float-card .pub-btn{width:100%; max-width:520px}
+}
 
 /* ---------------- frase grande / marquee en movimiento ---------------- */
 .pub-marquee{overflow:hidden; border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--soft); padding:16px 0; margin-top:48px}
@@ -329,9 +334,61 @@ html{scroll-behavior:smooth}
 /* ---------------- catálogo mayorista ---------------- */
 .wholesale-strip{
   background:var(--ink); color:#fff; text-align:center; padding:10px 16px; font:800 11px 'IBM Plex Mono',monospace;
-  letter-spacing:.06em;
+  letter-spacing:.06em; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px 10px;
 }
 .wholesale-strip strong{color:var(--lav)}
+.wholesale-info-link{
+  background:rgba(108,140,255,.16); color:var(--lav); border:1px solid rgba(108,140,255,.35); border-radius:99px;
+  padding:4px 11px; font:800 10px 'IBM Plex Mono',monospace; letter-spacing:.04em; cursor:pointer; transition:background-color 150ms ease;
+}
+.wholesale-info-link:hover{background:rgba(108,140,255,.28)}
+
+/* CTA "¿Quieres emprender?" — pie de página, en todo el catálogo público */
+.wholesale-cta{
+  display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  background:linear-gradient(120deg, rgba(108,140,255,.16), rgba(37,65,255,.1));
+  border:1.5px solid rgba(108,140,255,.35); border-radius:var(--radius-md); padding:16px 20px; margin-bottom:22px;
+  text-decoration:none; color:var(--fg); transition:transform 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+.wholesale-cta:hover{transform:translateY(-1px); border-color:var(--lav); background:linear-gradient(120deg, rgba(108,140,255,.24), rgba(37,65,255,.16))}
+.wholesale-cta-text{font-size:13px; line-height:1.4}
+.wholesale-cta-text strong{color:var(--lav); display:block; font-size:14.5px; margin-bottom:1px}
+.wholesale-cta-arrow{font-size:19px; color:var(--lav); flex:none; transition:transform 160ms ease}
+.wholesale-cta:hover .wholesale-cta-arrow{transform:translateX(4px)}
+
+/* Cuadro "¿Cómo ser mayorista?" */
+.wholesale-modal{
+  position:fixed; inset:0; z-index:260; display:flex; align-items:center; justify-content:center; padding:20px;
+  opacity:0; visibility:hidden; pointer-events:none; transition:opacity .2s ease, visibility .2s ease;
+}
+.wholesale-modal.open{opacity:1; visibility:visible; pointer-events:auto}
+.wholesale-modal-backdrop{position:absolute; inset:0; background:rgba(6,6,10,.65); backdrop-filter:blur(2px)}
+.wholesale-modal-card{
+  position:relative; z-index:2; background:var(--surface); border-radius:var(--radius-lg); padding:30px 26px 26px;
+  max-width:460px; width:100%; max-height:88vh; overflow:auto; box-shadow:0 30px 60px rgba(10,10,15,.35); color:var(--fg);
+  transform:scale(.94) translateY(10px); transition:transform .28s cubic-bezier(.23,1,.32,1);
+}
+.wholesale-modal.open .wholesale-modal-card{transform:scale(1) translateY(0)}
+.wholesale-modal-close{
+  position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:50%; border:0; cursor:pointer;
+  background:var(--soft); color:var(--fg); font-size:13px; display:flex; align-items:center; justify-content:center;
+}
+.wholesale-modal-close:hover{background:var(--blue); color:#fff}
+.wholesale-modal-eyebrow{font:800 10px 'IBM Plex Mono',monospace; letter-spacing:.14em; text-transform:uppercase; color:var(--lav)}
+.wholesale-modal-card h3{font-family:'Archivo',Impact,sans-serif; font-weight:900; font-style:italic; font-size:21px; margin:4px 0 18px; line-height:1.15}
+.wholesale-modal-step{display:flex; gap:12px; margin-bottom:16px}
+.wholesale-modal-step-num{
+  flex:none; width:24px; height:24px; border-radius:50%; background:var(--blue); color:#fff; font:800 11px 'IBM Plex Mono',monospace;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+}
+.wholesale-modal-step p{margin:0; font-size:13px; line-height:1.55; color:var(--fg-dim)}
+.wholesale-modal-step p strong{color:var(--fg)}
+.wholesale-modal-note{font-size:12px; color:var(--muted); line-height:1.5; margin:4px 0 18px; padding-top:14px; border-top:1px solid var(--line)}
+.wholesale-modal-dismiss{
+  display:block; width:100%; text-align:center; background:transparent; border:0; color:var(--muted); font:700 12px 'Archivo',sans-serif;
+  text-decoration:underline; padding:12px 0 0; cursor:pointer;
+}
+.wholesale-modal-dismiss:hover{color:var(--fg)}
 
 /* ---------------- contenido general ---------------- */
 .pub-main{max-width:1240px; margin:0 auto; padding:20px 16px 40px}
@@ -363,6 +420,14 @@ html{scroll-behavior:smooth}
 .pub-placeholder.small{width:56px;height:56px;border-radius:10px;font-size:8px}
 .pub-cat-chip{position:absolute; top:10px; left:10px; background:rgba(255,255,255,.92); color:var(--ink); font:800 8px 'IBM Plex Mono',monospace; letter-spacing:.08em; padding:5px 9px; border-radius:99px}
 .pub-ribbon{position:absolute; top:10px; right:10px; background:var(--lav); color:var(--ink); font:800 9px 'IBM Plex Mono',monospace; letter-spacing:.04em; padding:5px 10px; border-radius:99px; box-shadow:0 6px 14px rgba(45,66,255,.25); z-index:2}
+.pub-new-chip{
+  position:absolute; bottom:10px; left:10px; z-index:2;
+  background:linear-gradient(135deg,#ffcf4a,#ff9d3d); color:#2a1700;
+  font:800 9px 'IBM Plex Mono',monospace; letter-spacing:.05em; padding:5px 10px;
+  border-radius:99px; box-shadow:0 6px 14px rgba(255,159,61,.4);
+  animation:newChipIn .45s cubic-bezier(.2,.9,.2,1.3);
+}
+@keyframes newChipIn{0%{opacity:0; transform:translateY(6px) scale(.85)}100%{opacity:1; transform:translateY(0) scale(1)}}
 .pub-card-body{padding:12px 14px 16px; display:flex; flex-direction:column; gap:5px; flex:1}
 .pub-card-ref{font:800 10px 'IBM Plex Mono',monospace; letter-spacing:.1em; color:var(--blue); text-decoration:none}
 .pub-card-ref-row{display:flex; align-items:center; justify-content:space-between; gap:8px}
@@ -416,13 +481,18 @@ html{scroll-behavior:smooth}
   transition:border-color 160ms ease, color 160ms ease;
 }
 .size-guide-btn:hover{border-color:var(--blue); color:var(--blue)}
-.size-guide-modal{position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; padding:20px}
-.size-guide-modal.open{display:flex}
+.size-guide-modal{
+  position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:20px;
+  opacity:0; visibility:hidden; pointer-events:none; transition:opacity .2s ease, visibility .2s ease;
+}
+.size-guide-modal.open{opacity:1; visibility:visible; pointer-events:auto}
 .size-guide-modal-backdrop{position:absolute; inset:0; background:rgba(6,6,10,.6); backdrop-filter:blur(2px)}
 .size-guide-modal-card{
   position:relative; z-index:2; background:var(--surface); border-radius:var(--radius-lg); padding:28px 24px 24px;
   max-width:520px; width:100%; max-height:84vh; overflow:auto; box-shadow:0 30px 60px rgba(10,10,15,.3);
+  transform:scale(.94) translateY(10px); transition:transform .28s cubic-bezier(.23,1,.32,1);
 }
+.size-guide-modal.open .size-guide-modal-card{transform:scale(1) translateY(0)}
 .size-guide-modal-card h3{font-family:'Archivo',Impact,sans-serif; font-weight:900; font-style:italic; font-size:20px; margin:0 0 16px; text-transform:uppercase}
 .size-guide-close{
   position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:50%; border:0; cursor:pointer;
@@ -444,10 +514,17 @@ html{scroll-behavior:smooth}
   display:flex; align-items:center; justify-content:center; transition:background-color 160ms ease, transform 160ms ease;
 }
 .pdp-zoom-btn:hover{background:var(--blue); transform:scale(1.06)}
-.pdp-lightbox{position:fixed; inset:0; z-index:300; display:none; align-items:center; justify-content:center; padding:24px}
-.pdp-lightbox.open{display:flex}
+.pdp-lightbox{
+  position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center; padding:24px;
+  opacity:0; visibility:hidden; pointer-events:none; transition:opacity .22s ease, visibility .22s ease;
+}
+.pdp-lightbox.open{opacity:1; visibility:visible; pointer-events:auto}
 .pdp-lightbox-backdrop{position:absolute; inset:0; background:rgba(2,2,4,.92)}
-.pdp-lightbox img{position:relative; z-index:2; max-width:100%; max-height:100%; object-fit:contain; border-radius:8px}
+.pdp-lightbox img{
+  position:relative; z-index:2; max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;
+  transform:scale(.92); transition:transform .28s cubic-bezier(.23,1,.32,1);
+}
+.pdp-lightbox.open img{transform:scale(1)}
 .pdp-lightbox-close{
   position:absolute; top:18px; right:18px; z-index:3; width:38px; height:38px; border-radius:50%; border:0; cursor:pointer;
   background:rgba(255,255,255,.1); color:#fff; font-size:15px; display:flex; align-items:center; justify-content:center;
@@ -533,9 +610,12 @@ html{scroll-behavior:smooth}
 }
 .fav-btn:hover{transform:scale(1.15)}
 .fav-btn.active{color:#ef4444}
+.fav-btn.pop,.fav-btn-pdp.pop{animation:favPop .42s cubic-bezier(.17,.89,.32,1.49)}
+@keyframes favPop{0%{transform:scale(1)}35%{transform:scale(1.35)}60%{transform:scale(.92)}100%{transform:scale(1)}}
 .fav-btn-pdp{
   display:inline-flex; align-items:center; gap:5px; font:700 10.5px 'IBM Plex Mono',monospace; letter-spacing:.03em;
   color:var(--muted); border:1px solid var(--line); border-radius:99px; padding:5px 12px;
+  transition:color 160ms ease, border-color 160ms ease;
 }
 .fav-btn-pdp.active{color:#ef4444; border-color:#ef4444}
 .pdp-eyebrow-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:2px}
@@ -550,13 +630,18 @@ html{scroll-behavior:smooth}
 .fav-fab.has-items .fav-fab-icon{color:#ef4444}
 .fav-fab-count{background:var(--surface-2); color:var(--fg); border-radius:50%; min-width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; padding:0 5px; font-weight:900}
 
-.fav-modal{position:fixed; inset:0; z-index:250; display:none; align-items:center; justify-content:center; padding:20px}
-.fav-modal.open{display:flex}
+.fav-modal{
+  position:fixed; inset:0; z-index:250; display:flex; align-items:center; justify-content:center; padding:20px;
+  opacity:0; visibility:hidden; pointer-events:none; transition:opacity .2s ease, visibility .2s ease;
+}
+.fav-modal.open{opacity:1; visibility:visible; pointer-events:auto}
 .fav-modal-backdrop{position:absolute; inset:0; background:rgba(6,6,10,.6); backdrop-filter:blur(2px)}
 .fav-modal-card{
   position:relative; z-index:2; background:var(--surface); border-radius:var(--radius-lg); padding:28px 22px 22px;
   max-width:460px; width:100%; max-height:80vh; overflow:auto; box-shadow:0 30px 60px rgba(10,10,15,.3); color:var(--fg);
+  transform:scale(.94) translateY(10px); transition:transform .28s cubic-bezier(.23,1,.32,1);
 }
+.fav-modal.open .fav-modal-card{transform:scale(1) translateY(0)}
 .fav-modal-card h3{font-family:'Archivo',Impact,sans-serif; font-weight:900; font-style:italic; font-size:19px; margin:0 0 16px; color:var(--fg)}
 .fav-modal-close{
   position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:50%; border:0; cursor:pointer;
@@ -603,6 +688,17 @@ html{scroll-behavior:smooth}
   .cat-nav-wrap{top:65px; padding:10px 16px}
   .pub-main{padding:16px 12px 30px}
   .pedido-item{grid-template-columns:48px 1fr auto auto; gap:8px; padding:9px}
+}
+
+/* El nombre de marca se truncaba ("sportsw...") en celulares angostos porque
+   el header lo comprime entre el logo y los botones de favoritos/pedido. */
+@media(max-width:420px){
+  .pub-header-inner{gap:6px}
+  .pub-logo,.pub-logo-fallback{height:32px; width:32px}
+  .pub-brand{gap:7px}
+  .pub-brand-name{font-size:15px; letter-spacing:0}
+  .pub-tagline{display:none}
+  .pub-header-actions{gap:5px}
 }
 
 /* =========================================================
@@ -706,6 +802,13 @@ html{scroll-behavior:smooth}
   transition:opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
   transition-delay:var(--reveal-delay,0ms), var(--reveal-delay,0ms)}
 
+/* ---- fotos: leve acercamiento al aparecer, un paso detrás de la tarjeta
+   para dar sensación de profundidad sin distraer ---- */
+.js-motion .pub-card .pub-card-imgwrap img,
+.js-motion .cat-tile img{transform:scale(1.07); transition:transform 700ms var(--ease-out)}
+.js-motion .pub-card.reveal-in .pub-card-imgwrap img,
+.js-motion .cat-tile.reveal-in img{transform:scale(1); transition-delay:var(--reveal-delay,0ms)}
+
 /* ---- revelado genérico para secciones (banner flotante, encabezados) ---- */
 .js-motion .reveal-up:not(.reveal-in){opacity:0; transform:translateY(16px)}
 .js-motion .reveal-up.reveal-in{opacity:1; transform:none; transition:opacity 560ms var(--ease-out), transform 560ms var(--ease-out)}
@@ -739,6 +842,8 @@ html{scroll-behavior:smooth}
   .pub-card,.pub-card-imgwrap img,.pub-btn,.cat-chip,.size-pill,.color-swatch,.sw-toast{transition-property:opacity, background-color, border-color, color, box-shadow}
   .cart-fab-count.bump{animation:none}
   .pub-btn:active,.cat-chip:active,.size-pill:active,.color-swatch:active{transform:none}
+  .fav-modal-card,.size-guide-modal-card,.pdp-lightbox img,.pub-new-chip,.notfound-badge,.notfound-art,.fav-btn.active,.wholesale-modal-card{animation:none; transform:none}
+  .wholesale-cta:hover{transform:none}
 }
 
 /* =========================================================
@@ -827,4 +932,33 @@ html{scroll-behavior:smooth}
 .land-block-eyebrow{font:800 10px 'IBM Plex Mono',monospace; letter-spacing:.18em; text-transform:uppercase; opacity:.8}
 .land-block h3{font-family:'Archivo',Impact,sans-serif; font-weight:900; font-style:italic; font-size:21px; line-height:1.2; margin:0; text-transform:uppercase}
 .pub-btn-solid-light{background:#fff; color:var(--blue); box-shadow:0 10px 22px rgba(0,0,0,.18)}
-.land-block .pub-social-row{margin-top:2px}
+
+/* =========================================================
+   PÁGINA 404
+   ========================================================= */
+.notfound-wrap{
+  max-width:620px; margin:0 auto; padding:70px 20px 90px; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.notfound-badge{
+  font:900 110px/1 'Archivo',sans-serif; font-style:italic; letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--lav),var(--blue)); -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation:nfPop .6s cubic-bezier(.2,.9,.2,1.3);
+}
+.notfound-title{
+  font-family:'Archivo',sans-serif; font-weight:800; font-size:24px; margin:10px 0 2px; color:var(--fg);
+}
+.notfound-text{color:var(--muted); font-size:14.5px; line-height:1.55; max-width:420px; margin:0 0 26px}
+.notfound-actions{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-bottom:36px}
+.notfound-art{width:150px; opacity:.9; animation:nfFloat 3.2s ease-in-out infinite}
+.notfound-svg{width:100%; height:auto}
+.nf-circle{fill:none; stroke:var(--line); stroke-width:3}
+.nf-smile{fill:none; stroke:var(--lav); stroke-width:4; stroke-linecap:round}
+.nf-eye{fill:var(--lav)}
+@keyframes nfPop{0%{opacity:0; transform:scale(.6) translateY(16px)}100%{opacity:1; transform:scale(1) translateY(0)}}
+@keyframes nfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@media(max-width:600px){.notfound-badge{font-size:76px}.notfound-wrap{padding:50px 18px 70px}}
+.land-block-social{align-items:center; text-align:center}
+.land-block-social .pub-social-row{margin-top:6px; justify-content:center; width:100%; gap:14px}
+.land-block-social .pub-social-btn{width:48px; height:48px}
+.land-block-social .pub-social-btn svg{width:22px; height:22px}

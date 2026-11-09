@@ -20,7 +20,7 @@
 </div>
 {% else %}
 <div class="pdp">
-  <div class="pdp-gallery">
+  <div class="pdp-gallery reveal-up">
     <div class="pdp-main-image">
       {% if item.image %}<img id="pdpMainImage" src="{{ item.image }}" alt="{{ item.name }}">
       <button type="button" class="pdp-zoom-btn" id="pdpZoomBtn" aria-label="Ampliar imagen">🔍</button>
@@ -140,6 +140,7 @@
       <a href="{{ it.url }}" class="pub-card-imgwrap">
         {% if it.image %}<img src="{{ it.image }}" loading="lazy" alt="{{ it.name }}">{% else %}<div class="pub-placeholder">SIN IMAGEN</div>{% endif %}
         <span class="pub-cat-chip">{{ it.category }}</span>
+        {% if it.is_new %}<span class="pub-new-chip">★ Nuevo</span>{% endif %}
       </a>
       <div class="pub-card-body">
         <a href="{{ it.url }}" class="pub-card-ref">{{ it.ref }}</a>
@@ -154,6 +155,13 @@
   </div>
 </section>
 {% endif %}
+
+<section class="pdp-related recent-section" id="recentSection" style="display:none">
+  <div class="pub-section-head reveal-up">
+    <div><span class="pub-section-eyebrow">Tu historial</span><h2>Visto recientemente</h2></div>
+  </div>
+  <div class="pub-grid pdp-related-grid" id="recentGrid"></div>
+</section>
 
 {% if item.sizes %}
 <div class="size-guide-modal" id="sizeGuideModal" aria-hidden="true">
@@ -199,6 +207,11 @@
   let selectedColor = null;
   let selectedSize = null;
   let qty = 1;
+
+  if (window.SWRecent) {
+    window.SWRecent.track(item.ref);
+    window.SWRecent.renderInto('recentSection', 'recentGrid', item.ref, 8);
+  }
 
   const mainImage = document.getElementById('pdpMainImage');
 

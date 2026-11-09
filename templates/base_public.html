@@ -118,7 +118,7 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
 
 <footer class="pub-footer">
   <div class="pub-footer-inner">
-    <div class="pub-footer-top">
+    <div class="pub-footer-top reveal-up">
       <div class="pub-footer-brand-block">
         <div class="pub-footer-brand">{{ brand.brand_name }}</div>
         {% if brand.tagline %}<p class="pub-footer-tagline">{{ brand.tagline }}</p>{% endif %}
@@ -140,6 +140,10 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
         <a href="{{ url_for('mayoristas_catalog') }}">Mayoristas</a>
       </nav>
     </div>
+    <a class="wholesale-cta" href="{{ url_for('mayoristas_catalog') }}?info=1">
+      <span class="wholesale-cta-text"><strong>¿Quieres emprender?</strong> Trabaja con nosotros como mayorista</span>
+      <span class="wholesale-cta-arrow">→</span>
+    </a>
     <p class="pub-footer-note">Este catálogo es informativo. Los pedidos se confirman directamente por WhatsApp — no se realizan pagos ni compras dentro de esta página.</p>
   </div>
 </footer>

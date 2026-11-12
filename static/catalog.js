@@ -199,13 +199,93 @@
     return text;
   }
 
-  function sendOrder() {
+  function buildOrderMessageWithLink(orderUrl) {
+    var brandName = (global.BRAND && global.BRAND.name) || "la tienda";
+    var lines = resolved();
+    var text = "Hola " + brandName + " 👋\n";
+    text += "Quiero consultar por el siguiente pedido:\n\n";
+    lines.forEach(function (r, i) {
+      text += (i + 1) + ". " + r.line.ref + " - " + r.name + " x" + r.line.qty + "\n";
+    });
+    text += "\nTotal referencial: " + money(totalPrice()) + "\n";
+    text += "Ver mi pedido completo: " + orderUrl + "\n\n";
+    text += "Quedo atento/a para confirmar mi pedido.\n";
+    text += "(Esta selección no representa una compra confirmada.)";
+    return text;
+  }
+
+  // ---- "Factura" animada: tirilla que se "imprime" antes de abrir WhatsApp --
+  function showReceiptAnimation(rows, total, onDone) {
+    var reduceMotion = false;
+    try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+    var modal = document.createElement("div");
+    modal.className = "print-modal";
+    var itemsHtml = "";
+    rows.forEach(function (r, i) {
+      var delay = reduceMotion ? 0 : i * 90;
+      itemsHtml +=
+        '<div class="print-line" style="animation-delay:' + delay + 'ms">' +
+        "<span>" + r.line.qty + "x " + r.name + "</span>" +
+        "<span>" + money(r.price * r.line.qty) + "</span></div>";
+    });
+    var totalDelay = reduceMotion ? 0 : rows.length * 90 + 150;
+    var statusDelay = reduceMotion ? 0 : rows.length * 90 + 550;
+    modal.innerHTML =
+      '<div class="print-modal-backdrop"></div>' +
+      '<div class="print-ticket"><div class="print-ticket-inner">' +
+      '<div class="print-eyebrow">IMPRIMIENDO PEDIDO…</div>' +
+      '<div class="print-brand">' + ((global.BRAND && global.BRAND.name) || "") + "</div>" +
+      itemsHtml +
+      '<div class="print-divider"></div>' +
+      '<div class="print-total" style="animation-delay:' + totalDelay + 'ms"><span>TOTAL</span><span>' + money(total) + "</span></div>" +
+      '<div class="print-status" style="animation-delay:' + statusDelay + 'ms">Abriendo WhatsApp…</div>' +
+      "</div></div>";
+    document.body.appendChild(modal);
+    var waitMs = reduceMotion ? 500 : statusDelay + 700;
+    setTimeout(function () {
+      modal.remove();
+      if (onDone) onDone();
+    }, waitMs);
+  }
+
+  function sendOrder(customerName, customerPhone) {
     if (totalCount() === 0) {
       toast("Tu pedido está vacío.");
       return;
     }
-    global.open(waLink(buildOrderMessage()), "_blank");
-    toast("¡Listo! Te esperamos en WhatsApp para confirmar tu pedido.");
+    var rows = resolved();
+    var total = totalPrice();
+    var payload = {
+      customer_name: customerName || "",
+      customer_phone: customerPhone || "",
+      channel: "catalogo",
+      items: rows.map(function (r) {
+        return {
+          ref: r.line.ref, type: r.line.type, name: r.name, price: r.price,
+          qty: r.line.qty, color: r.line.color, talla: r.line.talla, image: r.image,
+        };
+      }),
+    };
+    fetch("/api/pedido", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then(function (resp) { return resp.ok ? resp.json() : Promise.reject(resp); })
+      .then(function (data) {
+        showReceiptAnimation(rows, total, function () {
+          global.open(waLink(buildOrderMessageWithLink(data.url)), "_blank");
+          toast("¡Listo! Te esperamos en WhatsApp para confirmar tu pedido.");
+          clear();
+          try { document.dispatchEvent(new CustomEvent("swcart:sent")); } catch (e) {}
+        });
+      })
+      .catch(function () {
+        // Si el servidor no responde, igual mandamos el pedido por WhatsApp
+        // como antes (sin link, con el texto completo de la selección).
+        global.open(waLink(buildOrderMessage()), "_blank");
+        toast("¡Listo! Te esperamos en WhatsApp para confirmar tu pedido.");
+      });
   }
 
   function sendProductInquiry(item, color, talla) {

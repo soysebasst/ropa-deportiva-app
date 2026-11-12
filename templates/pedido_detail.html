@@ -1,0 +1,82 @@
+{% extends "base_public.html" %}
+{% block meta_title %}Pedido #{{ order.slug }} | {{ brand.brand_name }}{% endblock %}
+{% block og_title %}Pedido #{{ order.slug }} | {{ brand.brand_name }}{% endblock %}
+{% block meta_description %}Detalle del pedido #{{ order.slug }} en {{ brand.brand_name }}.{% endblock %}
+{% block meta_robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block extra_head %}<style>.cart-fab{display:none}</style>{% endblock %}
+
+{% block subheader %}
+<div class="pub-breadcrumb">
+  <a href="{{ url_for('public_catalog') if order.channel != 'mayoristas' else url_for('mayoristas_catalog') }}">← Seguir viendo el catálogo</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="receipt-page">
+  <div class="receipt-ticket">
+    <div class="receipt-edge receipt-edge-top"></div>
+    <div class="receipt-body">
+      <div class="receipt-brand">
+        {% if brand.logo %}<img src="{{ url_for('uploaded_file', filename=brand.logo) }}" alt="{{ brand.brand_name }}">
+        {% else %}<span class="receipt-brand-mark">{{ (brand.brand_name or 'S')[:1]|upper }}</span>{% endif %}
+        <span class="receipt-brand-name">{{ brand.brand_name }}</span>
+      </div>
+      <div class="receipt-eyebrow">RESUMEN DE PEDIDO</div>
+      <div class="receipt-meta">
+        <span>Pedido #{{ order.slug|upper }}</span>
+        <span>{{ order.created_at }}</span>
+      </div>
+      <span class="receipt-status receipt-status-{{ order.status }}">{{ order.status_label }}</span>
+
+      {% if order.customer_name or order.customer_phone %}
+      <div class="receipt-customer">
+        {% if order.customer_name %}<div>{{ order.customer_name }}</div>{% endif %}
+        {% if order.customer_phone %}<div>{{ order.customer_phone }}</div>{% endif %}
+      </div>
+      {% endif %}
+
+      <div class="receipt-divider"></div>
+
+      <div class="receipt-items">
+        {% for it in order.lines %}
+        <div class="receipt-item">
+          <div class="receipt-item-row">
+            <span class="receipt-item-name">{{ it.ref }} — {{ it.name }}</span>
+            <span class="receipt-item-total">{{ (it.price * it.qty)|money }}</span>
+          </div>
+          <div class="receipt-item-sub">
+            {{ it.qty }} x {{ it.price|money }}{% if it.color %} · {{ it.color }}{% endif %}{% if it.talla %} · Talla {{ it.talla }}{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="receipt-divider"></div>
+
+      <div class="receipt-total-row">
+        <span>TOTAL</span>
+        <strong>{{ order.total|money }}</strong>
+      </div>
+      <p class="receipt-disclaimer">Este resumen no representa una compra confirmada. Se confirma disponibilidad, talla, color y envío directamente por WhatsApp.</p>
+
+      {% if is_admin %}
+      <div class="receipt-admin-actions">
+        {% if order.status == 'pendiente' %}
+        <form method="post" action="{{ url_for('pedido_confirm', slug=order.slug) }}">
+          <button type="submit" class="pub-btn pub-btn-solid pub-btn-block">✓ Confirmar pedido (registra la venta)</button>
+        </form>
+        <form method="post" action="{{ url_for('pedido_cancel', slug=order.slug) }}" onsubmit="return confirm('¿Marcar este pedido como cancelado?')">
+          <button type="submit" class="pub-btn pub-btn-outline pub-btn-block">Cancelar pedido</button>
+        </form>
+        {% else %}
+        <a class="pub-btn pub-btn-outline pub-btn-block" href="{{ url_for('pedidos_list') }}">← Ver todos los pedidos</a>
+        {% endif %}
+      </div>
+      {% elif brand.whatsapp_number %}
+      <a class="pub-btn pub-btn-wa pub-btn-block" href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+      {% endif %}
+    </div>
+    <div class="receipt-edge receipt-edge-bottom"></div>
+  </div>
+</div>
+{% endblock %}

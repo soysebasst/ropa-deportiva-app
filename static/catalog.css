@@ -577,6 +577,15 @@ html{scroll-behavior:smooth}
 .pedido-total-row span{font:800 10px 'IBM Plex Mono',monospace; letter-spacing:.12em; color:#bfc1c9}
 .pedido-total-row strong{font-family:'Archivo',Impact,sans-serif; font-weight:900; font-style:italic; font-size:26px; color:var(--lav)}
 .pedido-disclaimer{font-size:11px; color:#a9acb8; line-height:1.5; margin:0 0 18px}
+.pedido-customer{display:flex; gap:10px; margin-bottom:16px}
+.pedido-customer label{flex:1; display:flex; flex-direction:column; gap:5px; font:700 10px 'IBM Plex Mono',monospace; letter-spacing:.08em; color:#bfc1c9}
+.pedido-customer input{
+  background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.14); border-radius:12px;
+  padding:10px 12px; color:#fff; font:600 13px 'Archivo',sans-serif; outline:0;
+}
+.pedido-customer input::placeholder{color:#8a8da0}
+.pedido-customer input:focus{border-color:var(--lav)}
+@media(max-width:420px){.pedido-customer{flex-direction:column}}
 .pedido-actions{display:flex; flex-direction:column; gap:10px}
 .pedido-actions .pub-btn-text{color:#a9acb8}
 
@@ -994,3 +1003,55 @@ html{scroll-behavior:smooth}
 .cookie-banner-actions{display:flex; gap:10px; justify-content:flex-end}
 @keyframes cookieIn{0%{opacity:0; transform:translateY(16px)}100%{opacity:1; transform:translateY(0)}}
 @media(max-width:480px){.cookie-banner{left:10px; right:10px; bottom:10px; padding:16px}.cookie-banner-actions{flex-direction:column-reverse}.cookie-banner-actions .pub-btn{width:100%}}
+
+/* =========================================================
+   PEDIDO — "FACTURA" (página /pedido/<slug> y modal de envío)
+   Tirilla de datáfono: fondo claro tipo papel, monoespaciado,
+   bordes dentados arriba/abajo.
+   ========================================================= */
+.receipt-page{max-width:460px; margin:0 auto; padding:30px 16px 70px}
+.receipt-ticket{position:relative}
+.receipt-edge{height:10px; background:
+  radial-gradient(circle at 10px 0, transparent 9px, #eceadf 9px) 0 -5px/20px 10px repeat-x;
+}
+.receipt-edge-top{transform:rotate(180deg)}
+.receipt-body{
+  background:#f6f4ea; color:#201f1a; padding:26px 22px 24px;
+  font-family:'IBM Plex Mono',monospace;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.55);
+}
+.receipt-brand{display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:4px}
+.receipt-brand img{width:28px; height:28px; border-radius:8px; object-fit:cover}
+.receipt-brand-mark{width:28px; height:28px; border-radius:8px; background:var(--blue); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800}
+.receipt-brand-name{font:800 15px 'Archivo',sans-serif; letter-spacing:.01em}
+.receipt-eyebrow{text-align:center; font-size:10.5px; letter-spacing:.14em; color:#6b6555; margin-bottom:10px}
+.receipt-meta{display:flex; justify-content:space-between; font-size:11px; color:#6b6555; margin-bottom:10px}
+.receipt-status{display:block; width:fit-content; margin:0 auto 14px; font:700 10px 'Archivo',sans-serif; letter-spacing:.04em; padding:4px 12px; border-radius:99px; text-transform:uppercase}
+.receipt-status-pendiente{background:#fef3c7; color:#92400e}
+.receipt-status-confirmado{background:#dcfce7; color:#166534}
+.receipt-status-cancelado{background:#fee2e2; color:#991b1b}
+.receipt-customer{text-align:center; font-size:12px; color:#4b4638; margin-bottom:10px; line-height:1.5}
+.receipt-divider{border-top:1.5px dashed #c9c3af; margin:14px 0}
+.receipt-items{display:flex; flex-direction:column; gap:12px}
+.receipt-item-row{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; font-weight:700}
+.receipt-item-sub{font-size:11px; color:#6b6555; margin-top:2px}
+.receipt-total-row{display:flex; justify-content:space-between; align-items:baseline; font-size:15px; font-weight:800; margin-bottom:6px}
+.receipt-disclaimer{font-size:10.5px; color:#8a8370; line-height:1.5; text-align:center; margin:0 0 20px}
+.receipt-admin-actions{display:flex; flex-direction:column; gap:10px}
+
+/* ---- modal animado de "imprimiendo factura" antes de ir a WhatsApp ---- */
+.print-modal{position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center; padding:20px}
+.print-modal[aria-hidden="true"]{display:none}
+.print-modal-backdrop{position:absolute; inset:0; background:rgba(0,0,0,.72); backdrop-filter:blur(3px)}
+.print-ticket{position:relative; width:100%; max-width:320px; background:#f6f4ea; color:#201f1a; font-family:'IBM Plex Mono',monospace;
+  box-shadow:0 40px 80px -24px rgba(0,0,0,.7); max-height:78vh; overflow:hidden; animation:ticketPrint .5s var(--ease-out,ease)}
+.print-ticket-inner{padding:22px 20px 20px; max-height:78vh; overflow-y:auto}
+.print-eyebrow{text-align:center; font-size:10px; letter-spacing:.16em; color:#6b6555; margin-bottom:8px}
+.print-brand{text-align:center; font:800 15px 'Archivo',sans-serif; margin-bottom:12px}
+.print-line{font-size:11.5px; display:flex; justify-content:space-between; gap:8px; margin-bottom:6px; opacity:0; transform:translateY(6px); animation:lineIn .35s var(--ease-out,ease) forwards}
+.print-divider{border-top:1.5px dashed #c9c3af; margin:12px 0}
+.print-total{display:flex; justify-content:space-between; font:800 14px 'Archivo',sans-serif; opacity:0; animation:lineIn .35s var(--ease-out,ease) forwards}
+.print-status{text-align:center; font-size:11.5px; color:#6b6555; margin-top:14px; opacity:0; animation:lineIn .4s var(--ease-out,ease) forwards}
+@keyframes ticketPrint{0%{opacity:0; transform:translateY(-24px) scaleY(.85); transform-origin:top}100%{opacity:1; transform:translateY(0) scaleY(1)}}
+@keyframes lineIn{to{opacity:1; transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.print-ticket{animation:none}.print-line,.print-total,.print-status{animation:none; opacity:1; transform:none}}

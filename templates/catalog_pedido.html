@@ -32,6 +32,11 @@
     </div>
     <p class="pedido-disclaimer">Esta selección no representa una compra. Envíanos tu pedido para confirmar disponibilidad y coordinar la compra.</p>
 
+    <div class="pedido-customer">
+      <label>Tu nombre (opcional)<input type="text" id="customerName" placeholder="Nombre completo" autocomplete="name"></label>
+      <label>Tu teléfono (opcional)<input type="tel" id="customerPhone" placeholder="Ej. 3001234567" autocomplete="tel"></label>
+    </div>
+
     <div class="pedido-actions">
       <button class="pub-btn pub-btn-wa pub-btn-lg pub-btn-block" id="sendOrderBtn">Enviar pedido por WhatsApp</button>
       <button class="pub-btn pub-btn-outline pub-btn-block" id="shareOrderBtn">Compartir / guardar mi pedido</button>
@@ -101,7 +106,28 @@
     });
   }
 
-  document.getElementById('sendOrderBtn').addEventListener('click', () => SWCart.sendOrder());
+  // Recordamos nombre/teléfono en este navegador para no tener que
+  // escribirlos de nuevo la próxima vez que se haga un pedido.
+  const CUSTOMER_KEY = 'sportswearst_cliente_v1';
+  const nameInput = document.getElementById('customerName');
+  const phoneInput = document.getElementById('customerPhone');
+  try {
+    const saved = JSON.parse(localStorage.getItem(CUSTOMER_KEY) || '{}');
+    if (saved.name) nameInput.value = saved.name;
+    if (saved.phone) phoneInput.value = saved.phone;
+  } catch (e) { /* no disponible */ }
+  function saveCustomer(){
+    try { localStorage.setItem(CUSTOMER_KEY, JSON.stringify({ name: nameInput.value.trim(), phone: phoneInput.value.trim() })); } catch (e) {}
+  }
+
+  document.getElementById('sendOrderBtn').addEventListener('click', () => {
+    saveCustomer();
+    SWCart.sendOrder(nameInput.value.trim(), phoneInput.value.trim());
+  });
+
+  // Una vez el pedido queda guardado y se abrió WhatsApp, el carrito se
+  // vacía — refrescamos la vista para que se note de una vez.
+  document.addEventListener('swcart:sent', render);
 
   document.getElementById('shareOrderBtn').addEventListener('click', () => {
     const text = SWCart.buildOrderMessage();

@@ -95,6 +95,7 @@ PUBLIC_PATH_PREFIXES = (
     "/uploads/", "/static/", "/login",
     "/politica-de-privacidad", "/terminos-y-condiciones",
     "/robots.txt", "/sitemap.xml",
+    "/pedido/", "/api/pedido",
 )
 
 
@@ -290,6 +291,18 @@ def init_db():
             largo TEXT DEFAULT '',
             sort_order INTEGER DEFAULT 0
         );
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT NOT NULL UNIQUE,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            status TEXT NOT NULL DEFAULT 'pendiente',
+            channel TEXT NOT NULL DEFAULT 'catalogo',
+            customer_name TEXT DEFAULT '',
+            customer_phone TEXT DEFAULT '',
+            items_json TEXT NOT NULL DEFAULT '[]',
+            total REAL NOT NULL DEFAULT 0,
+            confirmed_at TEXT
+        );
         """
     )
 
@@ -454,6 +467,24 @@ def normalize_sizes(raw):
 
 def now_str():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+ORDER_STATUS_LABELS = {"pendiente": "Pendiente", "confirmado": "Confirmado", "cancelado": "Cancelado"}
+
+
+def new_order_slug():
+    return uuid.uuid4().hex[:10]
+
+
+def product_cost_lookup(conn):
+    """Mapa referencia -> costo unitario, para productos y conjuntos, usado al
+    confirmar un pedido web y pasarlo a Ventas con el costo real de hoy."""
+    out = {}
+    for p in conn.execute("SELECT reference, cost FROM products"):
+        out[p["reference"]] = p["cost"] or 0
+    for s in _sets_with_cost(conn):
+        out[s["reference"]] = s["cost"] or 0
+    return out
 
 
 @app.template_filter("money")
@@ -1650,6 +1681,154 @@ def catalog_pedido():
     return render_template("catalog_pedido.html", items=items)
 
 
+# ---------------------------------------------------------------------------
+# Pedidos web: el carrito del catálogo ("Mi pedido") ya no solo arma un texto
+# de WhatsApp — también queda guardado aquí, con un link que el cliente envía
+# y que tú puedes abrir para ver el pedido bien organizado. Al confirmarlo,
+# se refleja automáticamente en Ventas (sin tocar el inventario).
+# ---------------------------------------------------------------------------
+@app.post("/api/pedido")
+def api_create_order():
+    data = request.get_json(silent=True) or {}
+    raw_items = data.get("items") or []
+    items = []
+    total = 0.0
+    for it in raw_items:
+        try:
+            qty = max(1, int(it.get("qty") or 1))
+            price = float(it.get("price") or 0)
+        except (TypeError, ValueError):
+            continue
+        ref = (it.get("ref") or "").strip()
+        if not ref:
+            continue
+        line = {
+            "ref": ref,
+            "type": it.get("type") or "producto",
+            "name": (it.get("name") or ref).strip(),
+            "color": (it.get("color") or "").strip(),
+            "talla": (it.get("talla") or "").strip(),
+            "qty": qty,
+            "price": price,
+            "image": it.get("image") or None,
+        }
+        items.append(line)
+        total += price * qty
+    if not items:
+        return jsonify({"error": "El pedido está vacío."}), 400
+
+    channel = "mayoristas" if data.get("channel") == "mayoristas" else "catalogo"
+    slug = new_order_slug()
+    conn = db()
+    try:
+        # uuid4 hex ya es prácticamente único, pero por si acaso reintentamos
+        # con otro slug en el rarísimo caso de choque.
+        for _ in range(5):
+            try:
+                conn.execute(
+                    "INSERT INTO orders (slug, channel, customer_name, customer_phone, items_json, total) VALUES (?,?,?,?,?,?)",
+                    (slug, channel, (data.get("customer_name") or "").strip()[:120],
+                     (data.get("customer_phone") or "").strip()[:40], jsonify_safe(items), total),
+                )
+                conn.commit()
+                break
+            except sqlite3.IntegrityError:
+                slug = new_order_slug()
+        else:
+            return jsonify({"error": "No se pudo crear el pedido."}), 500
+    finally:
+        conn.close()
+    return jsonify({"slug": slug, "url": url_for("pedido_detail", slug=slug, _external=True)})
+
+
+def jsonify_safe(obj):
+    import json
+    return json.dumps(obj, ensure_ascii=False)
+
+
+@app.get("/pedido/<slug>")
+def pedido_detail(slug):
+    conn = db()
+    try:
+        row = conn.execute("SELECT * FROM orders WHERE slug=?", (slug,)).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        return render_template("notfound.html"), 404
+    import json
+    order = dict(row)
+    # Ojo: la clave no puede llamarse "items" — Jinja resuelve order.items como
+    # el método dict.items() en vez del valor, y rompe el {% for %} del template.
+    order["lines"] = json.loads(order["items_json"] or "[]")
+    order["status_label"] = ORDER_STATUS_LABELS.get(order["status"], order["status"])
+    return render_template("pedido_detail.html", order=order, is_admin=bool(session.get("admin_logged_in")))
+
+
+@app.post("/pedidos/<slug>/confirmar")
+def pedido_confirm(slug):
+    conn = db()
+    try:
+        row = conn.execute("SELECT * FROM orders WHERE slug=?", (slug,)).fetchone()
+        if not row:
+            flash("Ese pedido no existe.", "error")
+            return redirect(url_for("pedidos_list"))
+        order = dict(row)
+        if order["status"] == "confirmado":
+            flash("Ese pedido ya estaba confirmado.", "ok")
+            return redirect(url_for("pedido_detail", slug=slug))
+        import json
+        items = json.loads(order["items_json"] or "[]")
+        costs = product_cost_lookup(conn)
+        sale_date = now_str()[:10]
+        for it in items:
+            qty = it.get("qty") or 1
+            unit_cost = costs.get(it.get("ref"), 0)
+            name = it["name"]
+            variant = " / ".join(filter(None, [it.get("color"), it.get("talla")]))
+            if variant:
+                name += f" ({variant})"
+            conn.execute(
+                """INSERT INTO sales (sale_date, product_ref, product_name, quantity, cost, sale_price,
+                   shipping_cost, shipping_payer, customer_name, customer_phone, notes)
+                   VALUES (?,?,?,?,?,?,0,'ninguno',?,?,?)""",
+                (sale_date, it.get("ref", ""), name, qty, unit_cost * qty, it.get("price", 0) * qty,
+                 order["customer_name"], order["customer_phone"], f"Pedido web #{slug} confirmado desde el catálogo."),
+            )
+        conn.execute(
+            "UPDATE orders SET status='confirmado', confirmed_at=? WHERE slug=?",
+            (now_str(), slug),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    flash("Pedido confirmado y registrado en Ventas.", "ok")
+    return redirect(url_for("pedido_detail", slug=slug))
+
+
+@app.post("/pedidos/<slug>/cancelar")
+def pedido_cancel(slug):
+    conn = db()
+    conn.execute("UPDATE orders SET status='cancelado' WHERE slug=?", (slug,))
+    conn.commit()
+    conn.close()
+    flash("Pedido marcado como cancelado.", "ok")
+    return redirect(url_for("pedido_detail", slug=slug))
+
+
+@app.route("/pedidos")
+def pedidos_list():
+    conn = db()
+    try:
+        rows = [dict(r) for r in conn.execute("SELECT * FROM orders ORDER BY id DESC").fetchall()]
+    finally:
+        conn.close()
+    import json
+    for r in rows:
+        r["lines"] = json.loads(r["items_json"] or "[]")
+        r["status_label"] = ORDER_STATUS_LABELS.get(r["status"], r["status"])
+    return render_template("pedidos_list.html", orders=rows)
+
+
 @app.get("/api/catalogo/items")
 def api_catalog_items():
     conn = db()
@@ -1694,6 +1873,8 @@ def robots_txt():
         "Disallow: /tallas",
         "Disallow: /configuracion",
         "Disallow: /envios",
+        "Disallow: /pedido/",
+        "Disallow: /pedidos",
         "Disallow: /api/",
         f"Sitemap: {request.url_root}sitemap.xml",
     ]

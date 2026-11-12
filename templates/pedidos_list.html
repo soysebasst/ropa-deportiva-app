@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block pagetitle %}Pedidos{% endblock %}
+{% block eyebrow %}CATÁLOGO WEB{% endblock %}
+{% block heading %}Pedidos{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div><div class="section-kicker">PEDIDOS DESDE EL CATÁLOGO</div><h2>Pedidos recibidos</h2><p>Cada vez que alguien arma su pedido en el catálogo público y le da "Enviar por WhatsApp", queda guardado aquí. Al confirmarlo, se registra automáticamente en Ventas.</p></div>
+</div>
+
+<div class="stats stats-4">
+  <div class="stat"><span>PEDIDOS RECIBIDOS</span><strong>{{ orders|length }}</strong></div>
+  <div class="stat"><span>PENDIENTES</span><strong>{{ orders|selectattr('status','equalto','pendiente')|list|length }}</strong></div>
+  <div class="stat stat-highlight"><span>CONFIRMADOS</span><strong>{{ orders|selectattr('status','equalto','confirmado')|list|length }}</strong></div>
+  <div class="stat"><span>CANCELADOS</span><strong>{{ orders|selectattr('status','equalto','cancelado')|list|length }}</strong></div>
+</div>
+
+<div class="section-title"><h3>Historial</h3><span>{{ orders|length }} pedidos</span></div>
+
+<div class="table-wrap">
+<table class="data-table">
+  <thead>
+    <tr><th>Fecha</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Estado</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for o in orders %}
+    <tr>
+      <td>{{ o.created_at }}</td>
+      <td>
+        <div class="cell-strong">{{ o.customer_name or '—' }}</div>
+        {% if o.customer_phone %}<div class="cell-muted">{{ o.customer_phone }}</div>{% endif %}
+      </td>
+      <td><div class="cell-muted">{{ o.lines|length }} referencia(s){% if o.channel == 'mayoristas' %} · mayorista{% endif %}</div></td>
+      <td>{{ o.total|money }}</td>
+      <td><span class="order-status order-status-{{ o.status }}">{{ o.status_label }}</span></td>
+      <td class="cell-actions"><a class="link" href="{{ url_for('pedido_detail', slug=o.slug) }}">Ver pedido</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6"><div class="empty">Todavía no ha llegado ningún pedido desde el catálogo.</div></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

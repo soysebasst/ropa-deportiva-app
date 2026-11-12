@@ -1,0 +1,42 @@
+{% extends "base_public.html" %}
+{% block meta_title %}Política de privacidad | {{ brand.brand_name }}{% endblock %}
+{% block og_title %}Política de privacidad | {{ brand.brand_name }}{% endblock %}
+{% block meta_description %}Cómo {{ brand.brand_name }} trata los datos de sus clientes, de acuerdo con la Ley 1581 de 2012 de Colombia.{% endblock %}
+
+{% block subheader %}
+<div class="pub-breadcrumb">
+  <a href="{{ url_for('landing_page') }}">← Volver al inicio</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="legal-page reveal-up">
+  <h1 class="legal-title">Política de privacidad</h1>
+  <p class="legal-updated">Última actualización: {{ updated }}</p>
+
+  <p>En {{ brand.brand_name }} nos tomamos en serio el manejo de tus datos personales. Esta página explica, en términos simples, qué información recogemos cuando visitas nuestro catálogo y cuando nos escribes para hacer un pedido, y cómo la usamos — de acuerdo con la <strong>Ley 1581 de 2012</strong> (Régimen General de Protección de Datos Personales) y el Decreto 1377 de 2013 de Colombia.</p>
+
+  <h2>¿Qué información recogemos?</h2>
+  <p>Esta tienda es un catálogo informativo: no tiene registro de usuarios ni pasarela de pagos propia, así que no guardamos contraseñas ni datos de tarjetas. La información que sí puede llegar a quedar asociada a ti es:</p>
+  <p>Los datos que tú mismo nos compartes por WhatsApp al hacer un pedido — nombre, número de teléfono, dirección de envío y lo que decidas pedir — y que usamos únicamente para confirmar, preparar y enviar tu compra.</p>
+  <p>Datos de navegación recogidos de forma automática y anónima por Google Analytics (si está activado), como qué páginas visitas, desde qué dispositivo y de forma aproximada desde qué ciudad, para entender cómo mejorar el catálogo. Google Analytics usa cookies para esto; puedes leer más sobre cómo Google trata esta información en su propia política de privacidad.</p>
+  <p>Lo que escribas en localStorage de tu navegador (tu carrito, tus favoritos, los productos que has visto) — esto se queda únicamente en tu propio dispositivo, nunca se envía a nuestros servidores ni lo podemos ver nosotros.</p>
+
+  <h2>¿Para qué usamos tus datos?</h2>
+  <p>Exclusivamente para gestionar tu pedido (confirmarlo, coordinarlo y enviarlo), para responder tus preguntas por WhatsApp o redes sociales, y para entender de forma agregada y anónima cómo se usa el catálogo y así mejorarlo. Nunca vendemos ni compartimos tus datos personales con terceros para fines publicitarios.</p>
+
+  <h2>¿Cómo se almacenan tus datos?</h2>
+  <p>Tu conversación y tus datos de pedido quedan en WhatsApp, bajo las propias políticas de privacidad de WhatsApp/Meta. No mantenemos una base de datos de clientes aparte con tu información personal.</p>
+
+  <h2>Tus derechos</h2>
+  <p>Como titular de tus datos personales, en cualquier momento puedes pedirnos conocer, actualizar, rectificar o eliminar la información que tengamos sobre ti (por ejemplo, en una conversación de WhatsApp pasada), así como revocar la autorización para su tratamiento. Para ejercer estos derechos, escríbenos{% if brand.whatsapp_number %} por <a href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %} indicando tu solicitud.</p>
+
+  <h2>Cookies y analítica</h2>
+  <p>Usamos cookies únicamente con fines de analítica (Google Analytics), cuando está activada, para entender el tráfico del sitio. Puedes gestionar o bloquear las cookies desde la configuración de tu propio navegador en cualquier momento.</p>
+
+  <h2>Cambios a esta política</h2>
+  <p>Podemos actualizar esta política de vez en cuando para reflejar cambios en cómo operamos. Te recomendamos revisarla ocasionalmente.</p>
+
+  <p class="legal-contact">¿Dudas sobre esta política? Escríbenos{% if brand.whatsapp_number %} por <a href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}.</p>
+</div>
+{% endblock %}

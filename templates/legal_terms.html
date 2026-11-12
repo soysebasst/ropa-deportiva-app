@@ -1,0 +1,43 @@
+{% extends "base_public.html" %}
+{% block meta_title %}Términos y condiciones | {{ brand.brand_name }}{% endblock %}
+{% block og_title %}Términos y condiciones | {{ brand.brand_name }}{% endblock %}
+{% block meta_description %}Condiciones de uso del catálogo y de los pedidos de {{ brand.brand_name }}.{% endblock %}
+
+{% block subheader %}
+<div class="pub-breadcrumb">
+  <a href="{{ url_for('landing_page') }}">← Volver al inicio</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="legal-page reveal-up">
+  <h1 class="legal-title">Términos y condiciones</h1>
+  <p class="legal-updated">Última actualización: {{ updated }}</p>
+
+  <h2>1. Qué es este sitio</h2>
+  <p>{{ brand.brand_name }} es un catálogo informativo de ropa deportiva. A través de esta página puedes ver los productos disponibles, armar una selección ("mi pedido") y enviarla por WhatsApp para coordinar la compra directamente con nosotros. <strong>Esta página no procesa pagos ni compras en línea</strong>: no se te pedirá ningún dato de tarjeta ni se realizará ningún cobro desde el catálogo.</p>
+
+  <h2>2. Precios y disponibilidad</h2>
+  <p>Los precios mostrados están en pesos colombianos (COP) y pueden cambiar sin previo aviso. La disponibilidad de tallas, colores y unidades se confirma al momento de hacer el pedido por WhatsApp, ya que el catálogo no descuenta inventario en tiempo real.</p>
+
+  <h2>3. Cómo se hace un pedido</h2>
+  <p>Agregas los productos que te interesan a "Mi pedido", revisas tu selección y la envías por WhatsApp. Ese mensaje es un punto de partida para la conversación: el pedido se confirma una vez acordamos contigo disponibilidad, talla, color, forma de pago y envío.</p>
+
+  <h2>4. Envíos</h2>
+  <p>{{ brand.shipping_text or 'Los envíos se coordinan directamente contigo por WhatsApp una vez confirmado el pedido.' }}</p>
+
+  <h2>5. Cambios y garantía</h2>
+  <p>{{ brand.warranty_text or 'Las condiciones de cambio y garantía se te informan al confirmar tu pedido por WhatsApp.' }}</p>
+
+  <h2>6. Catálogo mayorista</h2>
+  <p>Los precios y condiciones especiales para mayoristas están disponibles en una sección aparte del catálogo y aplican únicamente a quienes cumplan las condiciones ahí descritas (como la compra mínima para registrarte como mayorista).</p>
+
+  <h2>7. Propiedad de las fotos y contenidos</h2>
+  <p>Las fotos, textos y diseño de este catálogo pertenecen a {{ brand.brand_name }}. Si eres mayorista registrado, puedes usar las fotos que te compartimos para promocionar los productos en tus propias redes, según lo acordado al registrarte.</p>
+
+  <h2>8. Marco legal</h2>
+  <p>Estas condiciones se rigen por las leyes de la República de Colombia, incluyendo la Ley 1480 de 2011 (Estatuto del Consumidor) y la Ley 1581 de 2012 de protección de datos personales — consulta nuestra <a href="{{ url_for('privacy_policy') }}">política de privacidad</a> para más detalle sobre el manejo de tus datos.</p>
+
+  <p class="legal-contact">¿Dudas sobre estos términos? Escríbenos{% if brand.whatsapp_number %} por <a href="https://wa.me/{{ brand.whatsapp_number|wanumber }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}.</p>
+</div>
+{% endblock %}

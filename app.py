@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, session, Response
 import csv, io
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import NotFound
 from pathlib import Path
 from datetime import datetime
 import sqlite3, uuid, os, shutil, hmac
@@ -8,6 +9,12 @@ import sqlite3, uuid, os, shutil, hmac
 from reportlab.lib.colors import HexColor, white
 from reportlab.pdfgen import canvas as rl_canvas
 from reportlab.pdfbase.pdfmetrics import stringWidth
+
+try:
+    from PIL import Image, ImageOps
+except ImportError:  # Pillow no instalado todavía (ver requirements.txt)
+    Image = None
+    ImageOps = None
 
 BASE = Path(__file__).resolve().parent
 
@@ -83,7 +90,12 @@ if ADMIN_PASSWORD == _default_admin_pass:
 # Rutas que cualquiera puede ver sin iniciar sesión: el catálogo público,
 # su API de solo lectura, las imágenes subidas, los archivos estáticos y la
 # propia pantalla de login. Todo lo demás exige haber iniciado sesión.
-PUBLIC_PATH_PREFIXES = ("/inicio", "/catalogo", "/api/catalogo", "/mayoristas", "/uploads/", "/static/", "/login")
+PUBLIC_PATH_PREFIXES = (
+    "/inicio", "/catalogo", "/api/catalogo", "/mayoristas", "/api/mayoristas",
+    "/uploads/", "/static/", "/login",
+    "/politica-de-privacidad", "/terminos-y-condiciones",
+    "/robots.txt", "/sitemap.xml",
+)
 
 
 @app.before_request
@@ -93,7 +105,22 @@ def require_admin_login():
         return
     if session.get("admin_logged_in"):
         return
+    # Antes de mandar a login, confirmamos que la ruta exista de verdad: si no
+    # corresponde a ninguna vista registrada, dejamos que Flask la trate como
+    # un 404 normal (con nuestra página personalizada) en vez de redirigir a
+    # una pantalla de login que no tiene nada que ver con lo que se buscaba.
+    try:
+        app.url_map.bind_to_environ(request.environ).match()
+    except NotFound:
+        return
+    except Exception:
+        pass
     return redirect(url_for("login", next=path))
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template("notfound.html"), 404
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -378,6 +405,13 @@ def color_hex(name):
     return COLOR_HEX_MAP.get((name or "").strip().lower(), "#97a2ff")
 
 
+# Lado más largo al que se reduce cualquier foto subida (sobra para verse
+# nítida en pantalla, incluso en retina, y pesa mucho menos que la foto
+# original de un celular moderno, que suele venir en 3000-4000px).
+MAX_IMAGE_SIDE = 1600
+JPEG_QUALITY = 82
+
+
 def save_image(file, allowed=ALLOWED):
     if not file or not file.filename:
         return None
@@ -385,7 +419,32 @@ def save_image(file, allowed=ALLOWED):
     if ext not in allowed:
         return None
     name = f"{uuid.uuid4().hex}.{ext}"
-    file.save(UPLOADS / name)
+    dest = UPLOADS / name
+    # SVG (logos) y GIF (podrían ser animados) se guardan tal cual, sin pasar
+    # por Pillow. El resto de formatos se comprime: se reduce el tamaño si la
+    # foto es más grande de lo necesario y se vuelve a guardar optimizada.
+    if Image is None or ext in {"svg", "gif"}:
+        file.save(dest)
+        return name
+    try:
+        img = Image.open(file.stream)
+        img = ImageOps.exif_transpose(img)  # respeta la orientación de fotos de celular
+        img.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE), Image.LANCZOS)
+        if ext in {"jpg", "jpeg"}:
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            img.save(dest, format="JPEG", quality=JPEG_QUALITY, optimize=True)
+        elif ext == "png":
+            img.save(dest, format="PNG", optimize=True)
+        elif ext == "webp":
+            img.save(dest, format="WEBP", quality=JPEG_QUALITY)
+        else:
+            img.save(dest)
+    except Exception:
+        # Si la imagen viene corrupta o Pillow no puede procesarla, igual la
+        # guardamos tal cual llegó en vez de perder la subida del usuario.
+        file.stream.seek(0)
+        file.save(dest)
     return name
 
 
@@ -1599,6 +1658,67 @@ def api_catalog_items():
     finally:
         conn.close()
     return jsonify(items)
+
+
+# ---------------------------------------------------------------------------
+# Páginas legales (requisito básico para poder anunciar en Meta/Google y para
+# cumplir con la Ley 1581 de 2012 de protección de datos en Colombia).
+# ---------------------------------------------------------------------------
+@app.route("/politica-de-privacidad")
+def privacy_policy():
+    return render_template("legal_privacy.html", updated=datetime.now().strftime("%d/%m/%Y"))
+
+
+@app.route("/terminos-y-condiciones")
+def terms_and_conditions():
+    return render_template("legal_terms.html", updated=datetime.now().strftime("%d/%m/%Y"))
+
+
+# ---------------------------------------------------------------------------
+# robots.txt y sitemap.xml — ayudan a que Google indexe bien el catálogo y a
+# que no intente rastrear el panel de administración.
+# ---------------------------------------------------------------------------
+@app.get("/robots.txt")
+def robots_txt():
+    lines = [
+        "User-agent: *",
+        "Allow: /inicio",
+        "Allow: /catalogo",
+        "Allow: /mayoristas",
+        "Allow: /politica-de-privacidad",
+        "Allow: /terminos-y-condiciones",
+        "Disallow: /productos",
+        "Disallow: /conjuntos",
+        "Disallow: /ventas",
+        "Disallow: /categorias",
+        "Disallow: /tallas",
+        "Disallow: /configuracion",
+        "Disallow: /envios",
+        "Disallow: /api/",
+        f"Sitemap: {request.url_root}sitemap.xml",
+    ]
+    return Response("\n".join(lines) + "\n", mimetype="text/plain")
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    conn = db()
+    try:
+        items = public_catalog_items(conn)
+    finally:
+        conn.close()
+    root = request.url_root.rstrip("/")
+    static_paths = [
+        "/inicio", "/catalogo", "/mayoristas",
+        "/politica-de-privacidad", "/terminos-y-condiciones",
+    ]
+    urls = [f"{root}{p}" for p in static_paths]
+    urls += [f"{root}/catalogo/producto/{it['ref']}" for it in items]
+    body = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for u in urls:
+        body.append(f"  <url><loc>{u}</loc></url>")
+    body.append("</urlset>")
+    return Response("\n".join(body), mimetype="application/xml")
 
 
 # ---------------------------------------------------------------------------

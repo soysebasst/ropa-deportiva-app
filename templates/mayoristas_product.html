@@ -52,7 +52,7 @@
         {% for c in item.colors %}
         {% if c.image %}
         <button class="color-swatch" data-color="{{ c.name }}" data-img="{{ c.image }}">
-          <img src="{{ c.image }}">
+          <img src="{{ c.image }}" alt="{{ item.name }} en color {{ c.name }}">
           <span class="color-swatch-name">{{ c.name }}</span>
         </button>
         {% else %}

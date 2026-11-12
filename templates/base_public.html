@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% block meta_title %}{{ brand.brand_name }} — Catálogo{% endblock %}</title>
 <meta name="description" content="{% block meta_description %}{{ brand.short_description }}{% endblock %}">
-<meta name="robots" content="index, follow">
+{% block meta_robots %}<meta name="robots" content="index, follow">{% endblock %}
 
 {% set fav = url_for('uploaded_file', filename=brand.logo) if brand.logo else url_for('static', filename='favicon.png') %}
 <link rel="icon" type="image/png" href="{{ fav }}">
@@ -34,15 +34,8 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
 </script>
 <meta name="theme-color" content="#06060a">
 
-{% if brand.ga_measurement_id %}
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ brand.ga_measurement_id }}"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '{{ brand.ga_measurement_id }}');
-</script>
-{% endif %}
+{# Google Analytics se carga más abajo, junto al banner de cookies, y solo
+   después de que la persona acepte — así no se activa sin consentimiento. #}
 {% block extra_head %}{% endblock %}
 </head>
 <body class="pub-body">
@@ -145,8 +138,56 @@ d.classList.add('js-motion');setTimeout(function(){if(!window.__swMotionReady)d.
       <span class="wholesale-cta-arrow">→</span>
     </a>
     <p class="pub-footer-note">Este catálogo es informativo. Los pedidos se confirman directamente por WhatsApp — no se realizan pagos ni compras dentro de esta página.</p>
+    <div class="pub-footer-legal">
+      <a href="{{ url_for('privacy_policy') }}">Política de privacidad</a>
+      <span class="pub-footer-legal-sep">·</span>
+      <a href="{{ url_for('terms_and_conditions') }}">Términos y condiciones</a>
+    </div>
   </div>
 </footer>
+
+{% if brand.ga_measurement_id %}
+<div class="cookie-banner" id="cookieBanner" hidden>
+  <p>Usamos cookies de analítica (Google Analytics) para entender cómo se usa este catálogo y mejorarlo. Puedes leer más en nuestra <a href="{{ url_for('privacy_policy') }}">política de privacidad</a>.</p>
+  <div class="cookie-banner-actions">
+    <button type="button" class="pub-btn pub-btn-outline pub-btn-sm" id="cookieDecline">Rechazar</button>
+    <button type="button" class="pub-btn pub-btn-solid pub-btn-sm" id="cookieAccept">Aceptar</button>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY = 'sportswearst_cookie_consent';
+  var banner = document.getElementById('cookieBanner');
+  var consent;
+  try { consent = localStorage.getItem(KEY); } catch (e) { consent = null; }
+  function loadGA(){
+    if (window.__gaLoaded) return;
+    window.__gaLoaded = true;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id={{ brand.ga_measurement_id }}';
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', '{{ brand.ga_measurement_id }}');
+  }
+  if (consent === 'accepted') { loadGA(); }
+  else if (consent !== 'declined' && banner) {
+    banner.hidden = false;
+    document.getElementById('cookieAccept').addEventListener('click', function(){
+      try { localStorage.setItem(KEY, 'accepted'); } catch (e) {}
+      loadGA();
+      banner.hidden = true;
+    });
+    document.getElementById('cookieDecline').addEventListener('click', function(){
+      try { localStorage.setItem(KEY, 'declined'); } catch (e) {}
+      banner.hidden = true;
+    });
+  }
+})();
+</script>
+{% endif %}
 
 <script id="catalog-data" type="application/json">{{ (items or [])|tojson }}</script>
 <script>

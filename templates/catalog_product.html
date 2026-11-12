@@ -29,7 +29,7 @@
     {% if item.images and item.images|length > 1 %}
     <div class="pdp-thumbs">
       {% for img in item.images %}
-      <button class="pdp-thumb {{ 'active' if loop.first }}" data-img="{{ img }}"><img src="{{ img }}"></button>
+      <button class="pdp-thumb {{ 'active' if loop.first }}" data-img="{{ img }}"><img src="{{ img }}" alt="{{ item.name }} — foto {{ loop.index }}"></button>
       {% endfor %}
     </div>
     {% endif %}
@@ -71,7 +71,7 @@
         {% for c in item.colors %}
         {% if c.image %}
         <button class="color-swatch" data-color="{{ c.name }}" data-img="{{ c.image }}">
-          <img src="{{ c.image }}">
+          <img src="{{ c.image }}" alt="{{ item.name }} en color {{ c.name }}">
           <span class="color-swatch-name">{{ c.name }}</span>
         </button>
         {% else %}

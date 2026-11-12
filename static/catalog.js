@@ -205,6 +205,7 @@
       return;
     }
     global.open(waLink(buildOrderMessage()), "_blank");
+    toast("¡Listo! Te esperamos en WhatsApp para confirmar tu pedido.");
   }
 
   function sendProductInquiry(item, color, talla) {

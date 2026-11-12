@@ -16,7 +16,7 @@
   <div class="form-section">
     <h3>Logo</h3>
     {% if brand.logo %}
-    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.logo) }}" style="background:#111217;padding:10px;border-radius:12px"><span>Logo actual — sube uno nuevo para reemplazarlo.</span></div>
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.logo) }}" alt="Logo actual" style="background:#111217;padding:10px;border-radius:12px"><span>Logo actual — sube uno nuevo para reemplazarlo.</span></div>
     {% else %}
     <p class="muted">Todavía no has subido un logo. Se mostrará la inicial de tu marca mientras tanto.</p>
     {% endif %}
@@ -55,7 +55,7 @@
     <h3>Foto del modelo (landing)</h3>
     <p class="muted">Se muestra flotando sobre el banner de inicio. Idealmente un PNG con fondo transparente (modelo recortado).</p>
     {% if brand.hero_photo %}
-    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.hero_photo) }}" style="max-height:160px;object-fit:contain;background:#111217;padding:10px;border-radius:12px"><span>Foto actual — sube una nueva para reemplazarla.</span></div>
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.hero_photo) }}" alt="Foto actual del modelo" style="max-height:160px;object-fit:contain;background:#111217;padding:10px;border-radius:12px"><span>Foto actual — sube una nueva para reemplazarla.</span></div>
     {% endif %}
     <label class="filebox"><input name="hero_photo" type="file" accept="image/*"><span>{{ 'Reemplazar foto' if brand.hero_photo else 'Subir foto del modelo' }}</span><small>PNG transparente recomendado, JPG/WEBP también funcionan</small></label>
   </div>
@@ -72,7 +72,7 @@
     <h3>Promoción destacada</h3>
     <p class="muted">Franja oscura al final de la landing. Si no subes una foto propia, se usa automáticamente la de un producto publicado.</p>
     {% if brand.promo_image %}
-    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.promo_image) }}" style="max-height:120px;object-fit:cover"><span>Imagen actual de la promoción.</span></div>
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.promo_image) }}" alt="Imagen actual de la promoción" style="max-height:120px;object-fit:cover"><span>Imagen actual de la promoción.</span></div>
     {% endif %}
     <label class="filebox"><input name="promo_image" type="file" accept="image/*"><span>{{ 'Reemplazar imagen' if brand.promo_image else 'Subir imagen de la promoción' }}</span></label>
     <div class="row" style="margin-top:10px">
@@ -95,7 +95,7 @@
     <h3>Banner grande (landing)</h3>
     <p class="muted">Se muestra al tope de tu página de inicio (/inicio), detrás del título grande.</p>
     {% if brand.banner_image %}
-    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.banner_image) }}" style="max-height:120px;object-fit:cover"><span>Imagen actual del banner — sube una nueva para reemplazarla.</span></div>
+    <div class="current-image"><img src="{{ url_for('uploaded_file', filename=brand.banner_image) }}" alt="Imagen actual del banner" style="max-height:120px;object-fit:cover"><span>Imagen actual del banner — sube una nueva para reemplazarla.</span></div>
     {% endif %}
     <label class="filebox"><input name="banner_image" type="file" accept="image/*"><span>{{ 'Reemplazar imagen del banner' if brand.banner_image else 'Subir imagen del banner' }}</span><small>Idealmente horizontal y de buena resolución (JPG, PNG, WEBP o GIF)</small></label>
     <div class="row" style="margin-top:10px">
